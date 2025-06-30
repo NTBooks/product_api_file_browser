@@ -34,13 +34,14 @@ const LazyImage = ({
   compact = false,
   ...props
 }) => {
-  const {
-    ref,
-    src: imageSrc,
-    isLoaded,
-    isError,
-    isInView,
-  } = useLazyImage(src, options);
+  const { ref, imageSrc, isLoaded, isError, isInView } = useLazyImage(
+    src,
+    options
+  );
+
+  // Use the actual width/height props if provided, otherwise use compact defaults
+  const placeholderHeight = height || (compact ? 120 : 200);
+  const placeholderWidth = width || (compact ? 120 : 300);
 
   // Compact placeholder for file cards
   const compactPlaceholder = (
@@ -49,14 +50,14 @@ const LazyImage = ({
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      width={width || "100%"}
-      height={height || 200}
+      width={placeholderWidth}
+      height={placeholderHeight}
       bgcolor="grey.100"
       borderRadius={1}
       border="1px dashed"
       borderColor="grey.300"
       sx={{
-        minHeight: height || 200, // Ensure minimum height is maintained
+        minHeight: placeholderHeight, // Ensure minimum height is maintained
         aspectRatio: width && height ? `${width}/${height}` : undefined, // Maintain aspect ratio
       }}>
       <Image
@@ -91,14 +92,14 @@ const LazyImage = ({
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      width={width || "100%"}
-      height={height || 200}
+      width={placeholderWidth}
+      height={placeholderHeight}
       bgcolor="grey.100"
       borderRadius={1}
       border="2px dashed"
       borderColor="grey.300"
       sx={{
-        minHeight: height || 200, // Ensure minimum height is maintained
+        minHeight: placeholderHeight, // Ensure minimum height is maintained
         aspectRatio: width && height ? `${width}/${height}` : undefined, // Maintain aspect ratio
         transition: "all 0.3s ease",
         "&:hover": {
@@ -145,14 +146,14 @@ const LazyImage = ({
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      width={width || "100%"}
-      height={height || 200}
+      width={placeholderWidth}
+      height={placeholderHeight}
       bgcolor="error.light"
       borderRadius={1}
       border="1px dashed"
       borderColor="error.main"
       sx={{
-        minHeight: height || 200, // Ensure minimum height is maintained
+        minHeight: placeholderHeight, // Ensure minimum height is maintained
         aspectRatio: width && height ? `${width}/${height}` : undefined, // Maintain aspect ratio
       }}>
       <BrokenImage
@@ -181,14 +182,14 @@ const LazyImage = ({
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      width={width || "100%"}
-      height={height || 200}
+      width={placeholderWidth}
+      height={placeholderHeight}
       bgcolor="error.light"
       borderRadius={1}
       border="2px dashed"
       borderColor="error.main"
       sx={{
-        minHeight: height || 200, // Ensure minimum height is maintained
+        minHeight: placeholderHeight, // Ensure minimum height is maintained
         aspectRatio: width && height ? `${width}/${height}` : undefined, // Maintain aspect ratio
       }}>
       <BrokenImage
@@ -218,6 +219,63 @@ const LazyImage = ({
       </Typography>
     </Box>
   );
+
+  if (isError) {
+    return (
+      <Box
+        ref={ref}
+        sx={{
+          width: placeholderWidth,
+          height: placeholderHeight,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "grey.100",
+          border: "1px solid",
+          borderColor: "grey.300",
+          borderRadius: 1,
+          ...sx,
+        }}
+        {...props}>
+        <Image sx={{ fontSize: 40, color: "grey.400", mb: 1 }} />
+        <Typography variant="caption" color="text.secondary">
+          Failed to load
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <Box
+        ref={ref}
+        sx={{
+          width: placeholderWidth,
+          height: placeholderHeight,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "grey.50",
+          border: "1px solid",
+          borderColor: "grey.200",
+          borderRadius: 1,
+          ...sx,
+        }}
+        {...props}>
+        <Skeleton
+          variant="circular"
+          width={compact ? 24 : 40}
+          height={compact ? 24 : 40}
+          sx={{ mb: 1 }}
+        />
+        <Typography variant="caption" color="text.secondary">
+          {compact ? "Loading..." : "Loading image..."}
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box

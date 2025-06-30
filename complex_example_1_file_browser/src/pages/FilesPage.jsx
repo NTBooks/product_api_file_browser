@@ -209,7 +209,9 @@ const FilesPage = () => {
           },
         }}
         onClick={() =>
-          navigate(`/file/${file.hash}`, { state: { fileData: file } })
+          navigate(`/file/${file.hash}`, {
+            state: { fileData: file, groupId: groupId },
+          })
         }>
         {isImageFile(file.name) && (
           <LazyImage

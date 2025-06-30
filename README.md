@@ -14,6 +14,9 @@ A modern file browser application built with React, Material UI, and Express.js 
 - **Modern UI**: Beautiful Material UI design with responsive layout
 - **Secure Credential Management**: Server-side session storage with automatic cleanup
 - **Environment Variable Support**: Hardcoded credentials for deployment scenarios
+- **Advanced Data Management**: React Query for efficient data fetching, caching, and state management
+- **Performance Optimizations**: Lazy loading for images with intersection observer
+- **Real-time Updates**: Automatic cache invalidation and background refetching
 
 ## Security Features
 
@@ -34,19 +37,22 @@ A modern file browser application built with React, Material UI, and Express.js 
 
 ```
 product_api_file_browser/
-├── client/                 # React frontend
+├── complex_example_1_file_browser/  # React frontend
 │   ├── src/
-│   │   ├── pages/         # React components
+│   │   ├── pages/         # React page components
 │   │   ├── services/      # API service functions
-│   │   ├── App.jsx        # Main app component
+│   │   ├── hooks/         # Custom React hooks (React Query, lazy loading)
+│   │   ├── components/    # Reusable components (LazyImage)
+│   │   ├── utils/         # Utility functions
+│   │   ├── App.jsx        # Main app component with React Query setup
 │   │   └── main.jsx       # React entry point
 │   ├── package.json       # Frontend dependencies
 │   └── vite.config.js     # Vite configuration
 ├── server/                # Express backend
-│   ├── server.js          # Express server with API routes
+│   ├── server.js          # Express server with API routes and session management
 │   ├── package.json       # Backend dependencies
 │   └── env.example        # Environment variables template
-├── package.json           # Root package.json with scripts
+├── package.json           # Root package.json with concurrent scripts
 └── README.md             # This file
 ```
 
@@ -72,9 +78,9 @@ product_api_file_browser/
 
    This will install dependencies for:
 
-   - Root project (concurrently)
-   - Client (React, Material UI, etc.)
-   - Server (Express, etc.)
+   - Root project (concurrently for running both servers)
+   - Client (React, Material UI, React Query, etc.)
+   - Server (Express, express-session, etc.)
 
 3. **Configure environment variables** (optional):
    ```bash
@@ -223,8 +229,10 @@ The application integrates with the Chainletter Credential Server Webhook API an
 - **React 18** - UI framework
 - **Material UI 5** - Component library and styling
 - **React Router 6** - Client-side routing
+- **React Query (TanStack Query)** - Data fetching, caching, and state management
 - **Vite** - Build tool and development server
 - **Axios** - HTTP client with interceptors
+- **react-intersection-observer** - Lazy loading for images
 
 ### Backend
 
@@ -257,18 +265,21 @@ npm run server
 
 ### File Structure Details
 
-#### Client (`/client`)
+#### Client (`/complex_example_1_file_browser`)
 
-- **Pages**: React components for each route
-- **Services**: API service functions with error handling
-- **App.jsx**: Main application component with routing
+- **Pages**: React components for each route (Dashboard, Groups, Files, FileDetail)
+- **Services**: API service functions with error handling and session management
+- **Hooks**: Custom React hooks for data fetching (React Query) and lazy loading
+- **Components**: Reusable components like LazyImage for optimized image loading
+- **Utils**: Utility functions for image handling and URL processing
+- **App.jsx**: Main application component with React Query setup and routing
 - **main.jsx**: React entry point with theme provider
 
 #### Server (`/server`)
 
-- **server.js**: Express server with middleware and session management
-- **API Routes**: Protected routes with credential validation
-- **Error Handling**: Centralized authentication error handling
+- **server.js**: Express server with middleware, session management, and API proxy routes
+- **API Routes**: Protected routes with credential validation and error handling
+- **Session Management**: Secure credential storage with automatic cleanup
 
 ## Troubleshooting
 

@@ -91,17 +91,12 @@ export const getGroups = async () => {
 
 // Create a new group
 export const createGroup = async (groupName, network) => {
-    // Create a simple text file as placeholder to create the group
-    const blob = new Blob(['Group created'], { type: 'text/plain' })
-    const file = new File([blob], 'group-created.txt', { type: 'text/plain' })
-
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('groupId', groupName)
-
-    const response = await axios.post(`${API_BASE_URL}/upload`, formData, {
+    const response = await axios.post(`${API_BASE_URL}/upload`, {
+        groupId: groupName,
+        network: network || 'public'
+    }, {
         headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'application/json'
         }
     })
 
@@ -124,9 +119,22 @@ export const getFileInfo = async (hash) => {
 
 // Upload a file
 export const uploadFile = async (file, groupId) => {
+    console.log('Uploading file:', file);
+    console.log('File type:', typeof file);
+    console.log('File constructor:', file.constructor.name);
+    console.log('Is File object:', file instanceof File);
+    console.log('Group ID:', groupId);
+
+    // Validate that file is a proper File object
+    if (!file || !(file instanceof File)) {
+        throw new Error('Invalid file object provided');
+    }
+
     const formData = new FormData()
     formData.append('file', file)
     formData.append('groupId', groupId)
+
+    console.log('FormData created successfully');
 
     const response = await axios.post(`${API_BASE_URL}/upload`, formData, {
         headers: {

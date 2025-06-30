@@ -159,8 +159,28 @@ const FileDetailPage = () => {
   const handleDelete = () => {
     if (!fileInfo) return;
 
+    console.log("FileInfo for delete:", fileInfo);
+    console.log("Group ID from fileInfo:", fileInfo.group_id);
+    console.log("All fileInfo keys:", Object.keys(fileInfo));
+
+    // Try to get group ID from various possible field names
+    const groupId =
+      fileInfo.group_id ||
+      fileInfo.groupId ||
+      fileInfo.group ||
+      location.state?.groupId;
+
+    if (!groupId) {
+      setSnackbar({
+        open: true,
+        message: "Cannot delete: Group ID not found",
+        severity: "error",
+      });
+      return;
+    }
+
     deleteMutation.mutate(
-      { fileHash: hash, groupId: fileInfo.group_id },
+      { fileHash: hash, groupId: groupId },
       {
         onSuccess: () => {
           setSnackbar({
@@ -170,7 +190,7 @@ const FileDetailPage = () => {
           });
           setDeleteDialogOpen(false);
           // Navigate back to files page
-          navigate(`/files/${fileInfo.group_id}`);
+          navigate(`/files/${groupId}`);
         },
         onError: (error) => {
           setSnackbar({

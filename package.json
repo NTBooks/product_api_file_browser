@@ -6,9 +6,9 @@
     "scripts": {
         "dev": "concurrently \"npm run server\" \"npm run client\"",
         "server": "cd server && npm run dev",
-        "client": "cd client && npm run dev",
-        "build": "cd client && npm run build",
-        "install-all": "npm install && cd client && npm install && cd ../server && npm install"
+        "client": "cd complex_example_1_file_browser && npm run dev",
+        "build": "cd complex_example_1_file_browser && npm run build",
+        "install-all": "npm install && cd complex_example_1_file_browser && npm install && cd ../server && npm install"
     },
     "keywords": [
         "file-browser",
@@ -20,8 +20,5 @@
     "license": "MIT",
     "devDependencies": {
         "concurrently": "^8.2.2"
-    },
-    "dependencies": {
-        "react-intersection-observer": "^9.16.0"
     }
 }

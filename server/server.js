@@ -3,6 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const axios = require('axios');
 const session = require('express-session');
+const FormData = require('form-data');
 require('dotenv').config();
 
 const app = express();
@@ -300,30 +301,67 @@ app.get('/api/file/:hash', requireCredentials, async (req, res) => {
     }
 });
 
-// POST /api/upload - Upload a file
+// POST /api/upload - Upload a file or create a group
 app.post('/api/upload', requireCredentials, upload.single('file'), async (req, res) => {
     try {
-        const { apikey, secretKey, network } = getCredentialsFromSession(req);
-        const { groupId } = req.body;
+        const { apikey, secretKey } = getCredentialsFromSession(req);
 
-        if (!groupId || !req.file) {
-            return res.status(400).json({ success: false, message: 'Group ID and file are required' });
+        // Debug logging
+        console.log('Upload request body:', req.body);
+        console.log('Upload request file:', req.file);
+
+        // For file uploads, read from form fields; for group creation, read from JSON body
+        const groupId = req.body.groupId || req.body.group_id;
+        const network = req.body.network;
+
+        console.log('Extracted groupId:', groupId);
+        console.log('Extracted network:', network);
+
+        if (!groupId) {
+            return res.status(400).json({ success: false, message: 'Group ID is required' });
         }
 
-        const formData = new FormData();
-        formData.append('file', req.file.buffer, req.file.originalname);
+        // Use network from request or fallback to session network
+        const targetNetwork = network || getCredentialsFromSession(req).network;
 
-        const response = await axios.post(`${API_BASE_URL}/webhook/${apikey}`, formData, {
-            headers: {
-                'secret-key': secretKey,
-                'group-id': groupId,
-                'network': network,
-                'Content-Type': 'multipart/form-data'
-            }
-        });
+        if (req.file) {
+            // File upload - create group with file
+            console.log('Processing file upload for group:', groupId);
 
-        res.json(response.data);
+            // Create FormData using the form-data package
+            const formData = new FormData();
+            formData.append('file', req.file.buffer, {
+                filename: req.file.originalname,
+                contentType: req.file.mimetype || 'application/octet-stream'
+            });
+
+            const response = await axios.post(`${API_BASE_URL}/webhook/${apikey}`, formData, {
+                headers: {
+                    'secret-key': secretKey,
+                    'group-id': groupId,
+                    'network': targetNetwork,
+                    ...formData.getHeaders() // Include FormData headers
+                }
+            });
+
+            res.json(response.data);
+        } else {
+            // Group creation without file
+            console.log('Processing group creation for group:', groupId);
+
+            const response = await axios.post(`${API_BASE_URL}/webhook/${apikey}`, {}, {
+                headers: {
+                    'secret-key': secretKey,
+                    'group-id': groupId,
+                    'network': targetNetwork,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            res.json(response.data);
+        }
     } catch (error) {
+        console.error('Upload error:', error);
         handleApiError(error, req, res);
     }
 });
@@ -462,6 +500,65 @@ app.get('/api/proxy-content', async (req, res) => {
             message: 'Failed to fetch content',
             error: error.message
         });
+    }
+});
+
+// GET /api/ipfs/* - Proxy IPFS content using service account token
+app.get('/api/ipfs/*', requireCredentials, async (req, res) => {
+    try {
+        const { apikey, secretKey, network } = getCredentialsFromSession(req);
+        const ipfsPath = req.params[0]; // Get the IPFS path after /api/ipfs/
+
+        if (!ipfsPath) {
+            return res.status(400).json({ success: false, message: 'IPFS path is required' });
+        }
+
+        console.log('Proxying IPFS content:', ipfsPath);
+
+        // Make request to the API server's IPFS endpoint
+        const response = await axios.get(`${API_BASE_URL}/ipfs/${ipfsPath}`, {
+            headers: {
+                'secret-key': secretKey,
+                'network': network,
+                'Authorization': `Bearer ${apikey}` // Use API key as Bearer token if needed
+            },
+            responseType: 'stream', // Stream the response for better performance
+            timeout: 30000 // 30 second timeout for IPFS content
+        });
+
+        // Forward the content type and other relevant headers
+        const contentType = response.headers['content-type'];
+        const contentLength = response.headers['content-length'];
+        const cacheControl = response.headers['cache-control'];
+
+        if (contentType) res.setHeader('Content-Type', contentType);
+        if (contentLength) res.setHeader('Content-Length', contentLength);
+        if (cacheControl) res.setHeader('Cache-Control', cacheControl);
+
+        // Set CORS headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+        // Stream the response
+        response.data.pipe(res);
+
+    } catch (error) {
+        console.error('IPFS proxy error:', error.message);
+
+        if (error.response?.status === 404) {
+            res.status(404).json({
+                success: false,
+                message: 'IPFS content not found',
+                error: 'Content not available on IPFS'
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch IPFS content',
+                error: error.message
+            });
+        }
     }
 });
 
