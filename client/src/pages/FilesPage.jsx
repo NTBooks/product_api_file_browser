@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -34,80 +34,54 @@ import {
   Warning,
 } from "@mui/icons-material";
 import {
-  getFiles,
-  uploadFile,
-  stampCollection,
-  getGroupStats,
-} from "../services/api";
+  useFiles,
+  useGroupStats,
+  useUploadFile,
+  useStampCollection,
+} from "../hooks/useApi";
+import LazyImage from "../components/LazyImage";
 
 const FilesPage = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
-  const [files, setFiles] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [stamping, setStamping] = useState(false);
-  const [groupStats, setGroupStats] = useState(null);
-  const [loadingStats, setLoadingStats] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
 
-  const fetchGroupStats = async () => {
-    setLoadingStats(true);
-    try {
-      const response = await getGroupStats(groupId);
-      if (response.success) {
-        setGroupStats(response.data);
-      }
-    } catch (err) {
-      console.error("Error fetching group stats:", err);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
+  // Use React Query hooks
+  const {
+    data: filesData,
+    isLoading: filesLoading,
+    error: filesError,
+    refetch: refetchFiles,
+  } = useFiles(groupId);
 
-  const fetchFiles = async () => {
-    setLoading(true);
-    setError("");
+  const {
+    data: groupStatsData,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useGroupStats(groupId);
 
-    try {
-      const response = await getFiles(groupId);
-      console.log("Files API response:", response); // Debug log
-      if (response.success) {
-        console.log("Files data:", response.files); // Debug log
-        // Process files to determine stamping status based on foreign_tx_id
-        const processedFiles = (response.files || []).map((file) => {
-          const processed = {
-            ...file,
-            // If foreign_tx_id exists, file is stamped
-            is_stamped: file.foreign_tx_id ? true : file.is_stamped || false,
-          };
-          console.log(
-            `File ${file.name}: foreign_tx_id=${file.foreign_tx_id}, is_stamped=${processed.is_stamped}`
-          ); // Debug log
-          return processed;
-        });
-        setFiles(processedFiles);
-      } else {
-        setError(response.message || "Failed to fetch files");
-      }
-    } catch (err) {
-      setError(err.message || "Failed to fetch files");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const uploadMutation = useUploadFile();
+  const stampMutation = useStampCollection();
 
-  useEffect(() => {
-    fetchFiles();
-    fetchGroupStats();
-  }, [groupId]);
+  // Process files to determine stamping status
+  const files = (filesData?.files || []).map((file) => ({
+    ...file,
+    // If foreign_tx_id exists, file is stamped
+    is_stamped: file.foreign_tx_id ? true : file.is_stamped || false,
+  }));
+
+  // Extract group stats from the response
+  const groupStats = groupStatsData?.data;
+
+  // Debug logging
+  console.log("Group stats data:", groupStatsData);
+  console.log("Extracted group stats:", groupStats);
 
   const formatBytes = (bytes) => {
     if (bytes === 0) return "0 Bytes";
@@ -168,63 +142,46 @@ const FilesPage = () => {
   const handleUpload = async () => {
     if (!selectedFile) return;
 
-    setUploading(true);
-    try {
-      const response = await uploadFile(selectedFile, groupId);
-      if (response.success) {
-        setSnackbar({
-          open: true,
-          message: "File uploaded successfully!",
-          severity: "success",
-        });
-        setUploadDialogOpen(false);
-        setSelectedFile(null);
-        fetchFiles();
-      } else {
-        setSnackbar({
-          open: true,
-          message: response.message || "Upload failed",
-          severity: "error",
-        });
+    uploadMutation.mutate(
+      { file: selectedFile, groupId },
+      {
+        onSuccess: () => {
+          setSnackbar({
+            open: true,
+            message: "File uploaded successfully!",
+            severity: "success",
+          });
+          setUploadDialogOpen(false);
+          setSelectedFile(null);
+        },
+        onError: (error) => {
+          setSnackbar({
+            open: true,
+            message: error.message || "Upload failed",
+            severity: "error",
+          });
+        },
       }
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message || "Upload failed",
-        severity: "error",
-      });
-    } finally {
-      setUploading(false);
-    }
+    );
   };
 
-  const handleStampCollection = async () => {
-    setStamping(true);
-    try {
-      const response = await stampCollection(groupId);
-      if (response.success) {
+  const handleStampCollection = () => {
+    stampMutation.mutate(groupId, {
+      onSuccess: () => {
         setSnackbar({
           open: true,
           message: "Collection stamped successfully!",
           severity: "success",
         });
-        fetchFiles();
-      } else {
+      },
+      onError: (error) => {
         setSnackbar({
           open: true,
-          message: response.message || "Stamping failed",
+          message: error.message || "Stamping failed",
           severity: "error",
         });
-      }
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message || "Stamping failed",
-        severity: "error",
-      });
-    } finally {
-      setStamping(false);
-    }
+      },
+    });
   };
 
   const FileCard = ({ file }) => {
@@ -246,15 +203,14 @@ const FilesPage = () => {
           navigate(`/file/${file.hash}`, { state: { fileData: file } })
         }>
         {isImageFile(file.name) && (
-          <CardMedia
-            component="img"
-            height="200"
-            width="100%"
-            image={
+          <LazyImage
+            src={
               getResizedImageUrl(file.gatewayurl) ||
               `https://ipfs.io/ipfs/${file.hash}`
             }
             alt={file.name}
+            width="100%"
+            height="200"
             sx={{
               objectFit: "contain",
               backgroundColor: "#f5f5f5",
@@ -312,8 +268,8 @@ const FilesPage = () => {
           <Button
             variant="outlined"
             startIcon={<Refresh />}
-            onClick={fetchFiles}
-            disabled={loading}>
+            onClick={refetchFiles}
+            disabled={filesLoading}>
             Refresh
           </Button>
           <Button
@@ -326,15 +282,14 @@ const FilesPage = () => {
             variant="contained"
             color="secondary"
             startIcon={<Verified />}
-            onClick={handleStampCollection}
-            disabled={stamping}>
-            {stamping ? "Stamping..." : "Stamp Collection"}
+            onClick={handleStampCollection}>
+            Stamp Collection
           </Button>
         </Box>
       </Box>
 
       {/* Group Statistics */}
-      {loadingStats ? (
+      {statsLoading ? (
         <Box display="flex" justifyContent="center" mb={3}>
           <CircularProgress size={24} />
           <Typography variant="body2" sx={{ ml: 1 }}>
@@ -401,13 +356,13 @@ const FilesPage = () => {
         )
       )}
 
-      {error && (
+      {filesError && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
+          {filesError.message}
         </Alert>
       )}
 
-      {loading ? (
+      {filesLoading ? (
         <Box display="flex" justifyContent="center" p={4}>
           <CircularProgress />
         </Box>
@@ -461,8 +416,8 @@ const FilesPage = () => {
           <Button
             onClick={handleUpload}
             variant="contained"
-            disabled={!selectedFile || uploading}>
-            {uploading ? "Uploading..." : "Upload"}
+            disabled={!selectedFile}>
+            Upload
           </Button>
         </DialogActions>
       </Dialog>

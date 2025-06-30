@@ -33,17 +33,14 @@ import {
 } from "@mui/icons-material";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { getFileInfo, deleteFile } from "../services/api";
+import { useFileInfo, useDeleteFile } from "../hooks/useApi";
+import LazyImage from "../components/LazyImage";
 
 const FileDetailPage = () => {
   const { hash } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const [fileInfo, setFileInfo] = useState(location.state?.fileData || null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [jsonContent, setJsonContent] = useState(null);
   const [jsonLoading, setJsonLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -52,50 +49,30 @@ const FileDetailPage = () => {
     severity: "success",
   });
 
-  const fetchFileInfo = async () => {
-    setLoading(true);
-    setError("");
+  // Use React Query hook for file info
+  const { data: apiFileInfo, isLoading, error } = useFileInfo(hash);
 
-    try {
-      const response = await getFileInfo(hash);
-      console.log("File info response:", response);
-      if (response.success) {
-        console.log("File info data:", response.data);
-        // Merge API data with existing state data, preserving only essential fields from state
-        const existingData = location.state?.fileData || {};
-        const mergedData = {
-          ...response.data, // API data takes precedence
-          // Only preserve these fields from navigation state if API doesn't provide them
-          name: response.data.name || existingData.name,
-          size: response.data.size || existingData.size,
-          network: response.data.network || existingData.network,
-          gatewayurl: response.data.gatewayurl || existingData.gatewayurl,
-          // Determine stamping status: if foreign_tx_id exists, file is stamped
-          is_stamped: response.data.foreign_tx_id
-            ? true
-            : response.data.is_stamped !== undefined
-            ? response.data.is_stamped
-            : existingData.is_stamped,
-        };
-        console.log("File detail merged data:", mergedData); // Debug log
-        console.log("API data foreign_tx_id:", response.data.foreign_tx_id); // Debug log
-        console.log("Final is_stamped value:", mergedData.is_stamped); // Debug log
-        setFileInfo(mergedData);
-      } else {
-        setError(response.message || "Failed to fetch file info");
+  // Merge API data with navigation state data
+  const existingData = location.state?.fileData || {};
+  const fileInfo = apiFileInfo?.success
+    ? {
+        ...apiFileInfo.data, // API data takes precedence
+        // Only preserve these fields from navigation state if API doesn't provide them
+        name: apiFileInfo.data.name || existingData.name,
+        size: apiFileInfo.data.size || existingData.size,
+        network: apiFileInfo.data.network || existingData.network,
+        gatewayurl: apiFileInfo.data.gatewayurl || existingData.gatewayurl,
+        // Determine stamping status: if foreign_tx_id exists, file is stamped
+        is_stamped: apiFileInfo.data.foreign_tx_id
+          ? true
+          : apiFileInfo.data.is_stamped !== undefined
+          ? apiFileInfo.data.is_stamped
+          : existingData.is_stamped,
       }
-    } catch (err) {
-      console.error("Error fetching file info:", err);
-      setError(err.message || "Failed to fetch file info");
-    } finally {
-      setLoading(false);
-    }
-  };
+    : existingData;
 
-  useEffect(() => {
-    // Always fetch detailed file info from API to get contract, foreign_tx_id, etc.
-    fetchFileInfo();
-  }, [hash]);
+  // Use React Query mutation for delete
+  const deleteMutation = useDeleteFile();
 
   useEffect(() => {
     if (fileInfo && isJsonFile(fileInfo.name)) {
@@ -179,37 +156,31 @@ const FileDetailPage = () => {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!fileInfo) return;
 
-    setDeleting(true);
-    try {
-      const response = await deleteFile(hash, fileInfo.group_id);
-      if (response.success) {
-        setSnackbar({
-          open: true,
-          message: "File deleted successfully!",
-          severity: "success",
-        });
-        setDeleteDialogOpen(false);
-        // Navigate back to files page
-        navigate(`/files/${fileInfo.group_id}`);
-      } else {
-        setSnackbar({
-          open: true,
-          message: response.message || "Delete failed",
-          severity: "error",
-        });
+    deleteMutation.mutate(
+      { fileHash: hash, groupId: fileInfo.group_id },
+      {
+        onSuccess: () => {
+          setSnackbar({
+            open: true,
+            message: "File deleted successfully!",
+            severity: "success",
+          });
+          setDeleteDialogOpen(false);
+          // Navigate back to files page
+          navigate(`/files/${fileInfo.group_id}`);
+        },
+        onError: (error) => {
+          setSnackbar({
+            open: true,
+            message: error.message || "Delete failed",
+            severity: "error",
+          });
+        },
       }
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: err.message || "Delete failed",
-        severity: "error",
-      });
-    } finally {
-      setDeleting(false);
-    }
+    );
   };
 
   const copyToClipboard = (text) => {
@@ -221,7 +192,7 @@ const FileDetailPage = () => {
     });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" p={4}>
         <CircularProgress />
@@ -238,7 +209,7 @@ const FileDetailPage = () => {
           sx={{ mb: 2 }}>
           Back
         </Button>
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error">{error.message}</Alert>
       </Box>
     );
   }
@@ -280,11 +251,11 @@ const FileDetailPage = () => {
                 File Preview
               </Typography>
               {isImageFile(fileInfo.name) ? (
-                <CardMedia
-                  component="img"
-                  height="400"
-                  image={getResizedImageUrl(fileInfo.gatewayurl)}
+                <LazyImage
+                  src={getResizedImageUrl(fileInfo.gatewayurl)}
                   alt={fileInfo.name}
+                  width="100%"
+                  height="400"
                   sx={{ objectFit: "contain", borderRadius: 1 }}
                 />
               ) : isJsonFile(fileInfo.name) ? (
@@ -551,12 +522,8 @@ const FileDetailPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleDelete}
-            color="error"
-            variant="contained"
-            disabled={deleting}>
-            {deleting ? "Deleting..." : "Delete"}
+          <Button onClick={handleDelete} color="error" variant="contained">
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

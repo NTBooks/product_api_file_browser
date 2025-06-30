@@ -20,5 +20,8 @@
     "license": "MIT",
     "devDependencies": {
         "concurrently": "^8.2.2"
+    },
+    "dependencies": {
+        "react-intersection-observer": "^9.16.0"
     }
 }

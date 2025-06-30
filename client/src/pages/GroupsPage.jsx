@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -31,31 +31,23 @@ import {
   CheckCircle,
   Warning,
 } from "@mui/icons-material";
-import { getGroups, createGroup, getFiles } from "../services/api";
+import { useGroups, useStampCollection } from "../hooks/useApi";
+import { createGroup } from "../services/api";
 
 const GroupsPage = () => {
-  const [groups, setGroups] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: "", network: "public" });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const navigate = useNavigate();
 
-  const fetchGroups = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await getGroups();
-      console.log("Groups API response:", response);
-      console.log("Groups data:", response.groups);
-      setGroups(response.groups || []);
-    } catch (err) {
-      console.error("Error fetching groups:", err);
-      setError(err.response?.data?.message || "Failed to fetch groups");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use React Query hook for fetching groups
+  const { data: groupsData, isLoading, error, refetch } = useGroups();
+
+  const groups = groupsData?.groups || [];
 
   const handleCreateGroup = async () => {
     try {
@@ -63,17 +55,23 @@ const GroupsPage = () => {
       if (response.success) {
         setCreateDialogOpen(false);
         setNewGroup({ name: "", network: "public" });
-        fetchGroups(); // Refresh the groups list
+        // Refetch groups to show the new group
+        refetch();
+        setSnackbar({
+          open: true,
+          message: "Group created successfully!",
+          severity: "success",
+        });
       }
     } catch (err) {
       console.error("Error creating group:", err);
-      setError(err.response?.data?.message || "Failed to create group");
+      setSnackbar({
+        open: true,
+        message: err.response?.data?.message || "Failed to create group",
+        severity: "error",
+      });
     }
   };
-
-  useEffect(() => {
-    fetchGroups();
-  }, []);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
@@ -149,8 +147,8 @@ const GroupsPage = () => {
           <Button
             variant="outlined"
             startIcon={<Refresh />}
-            onClick={fetchGroups}
-            disabled={loading}>
+            onClick={() => refetch()}
+            disabled={isLoading}>
             Refresh
           </Button>
           <Button
@@ -164,11 +162,11 @@ const GroupsPage = () => {
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
+          {error.message || "Failed to fetch groups"}
         </Alert>
       )}
 
-      {loading ? (
+      {isLoading ? (
         <Box display="flex" justifyContent="center" p={4}>
           <CircularProgress />
         </Box>
@@ -200,19 +198,18 @@ const GroupsPage = () => {
               label="Group Name"
               value={newGroup.name}
               onChange={(e) =>
-                setNewGroup((prev) => ({ ...prev, name: e.target.value }))
+                setNewGroup({ ...newGroup, name: e.target.value })
               }
-              margin="normal"
-              placeholder="Enter group name"
+              sx={{ mb: 2 }}
             />
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Network Type</InputLabel>
+            <FormControl fullWidth>
+              <InputLabel>Network</InputLabel>
               <Select
                 value={newGroup.network}
+                label="Network"
                 onChange={(e) =>
-                  setNewGroup((prev) => ({ ...prev, network: e.target.value }))
-                }
-                label="Network Type">
+                  setNewGroup({ ...newGroup, network: e.target.value })
+                }>
                 <MenuItem value="public">Public</MenuItem>
                 <MenuItem value="private">Private</MenuItem>
               </Select>
@@ -229,6 +226,19 @@ const GroupsPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}>
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
