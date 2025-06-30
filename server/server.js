@@ -426,6 +426,45 @@ app.get('/api/group-stats/:groupId', requireCredentials, async (req, res) => {
     }
 });
 
+// GET /api/proxy-content - Proxy content from IPFS gateway to avoid CORS issues
+app.get('/api/proxy-content', async (req, res) => {
+    try {
+        const { url } = req.query;
+
+        if (!url) {
+            return res.status(400).json({ success: false, message: 'URL parameter is required' });
+        }
+
+        console.log('Proxying content from:', url);
+
+        const response = await axios.get(url, {
+            responseType: 'text',
+            timeout: 10000, // 10 second timeout
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; FileBrowser/1.0)'
+            }
+        });
+
+        // Set appropriate content type based on the response
+        const contentType = response.headers['content-type'] || 'text/plain';
+        res.setHeader('Content-Type', contentType);
+
+        // Set CORS headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+        res.send(response.data);
+    } catch (error) {
+        console.error('Proxy content error:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch content',
+            error: error.message
+        });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     if (hasHardcodedCredentials()) {

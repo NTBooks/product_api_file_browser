@@ -79,7 +79,8 @@ export const useLazyImage = (src, options = {}) => {
 ```jsx
 // components/LazyImage.jsx
 import React from "react";
-import { Box, Skeleton, Alert } from "@mui/material";
+import { Box, Typography, CircularProgress } from "@mui/material";
+import { Image, BrokenImage } from "@mui/icons-material";
 import { useLazyImage } from "../hooks/useLazyImage";
 
 const LazyImage = ({
@@ -91,6 +92,7 @@ const LazyImage = ({
   options = {},
   placeholder,
   errorComponent,
+  compact = false,
   ...props
 }) => {
   const {
@@ -101,6 +103,44 @@ const LazyImage = ({
     isInView,
   } = useLazyImage(src, options);
 
+  // Default placeholder with image icon and loading text
+  const defaultPlaceholder = (
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      width={width || "100%"}
+      height={height || 200}
+      bgcolor="grey.100"
+      borderRadius={1}
+      border="2px dashed"
+      borderColor="grey.300"
+      sx={{
+        transition: "all 0.3s ease",
+        "&:hover": {
+          bgcolor: "grey.200",
+          borderColor: "grey.400",
+        },
+      }}>
+      <Image
+        sx={{
+          fontSize: 48,
+          color: "grey.400",
+          mb: 1,
+          animation: "pulse 2s infinite",
+        }}
+      />
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ fontWeight: 500 }}>
+        Loading Image...
+      </Typography>
+      <CircularProgress size={20} sx={{ mt: 1, color: "primary.main" }} />
+    </Box>
+  );
+
   return (
     <Box
       ref={ref}
@@ -109,9 +149,7 @@ const LazyImage = ({
       {/* Show placeholder while loading */}
       {(!isInView || !isLoaded) &&
         !isError &&
-        (placeholder || (
-          <Skeleton variant="rectangular" width={width} height={height} />
-        ))}
+        (placeholder || (compact ? compactPlaceholder : defaultPlaceholder))}
 
       {/* Show error if failed */}
       {isError &&
@@ -173,7 +211,34 @@ const { ref, inView } = useInView({
 });
 ```
 
-### 2. Loading States
+### 2. Preventing Layout Shifts
+
+The component prevents jarring layout shifts by maintaining consistent dimensions:
+
+```jsx
+// ✅ Good - Placeholder reserves exact same space
+<LazyImage
+  src={imageUrl}
+  width="100%"
+  height="200px"
+  sx={{
+    minHeight: "200px", // Ensures consistent height
+    aspectRatio: "1/1", // Maintains square aspect ratio
+  }}
+/>
+
+// ❌ Bad - Placeholder changes size when image loads
+<img src={imageUrl} style={{ width: "100%" }} /> // Height changes based on image
+```
+
+**Key Features:**
+
+- **Consistent Dimensions**: Placeholder and image have identical size
+- **Aspect Ratio Lock**: Maintains shape regardless of image dimensions
+- **Min Height**: Ensures minimum space is always reserved
+- **Smooth Transitions**: No jarring jumps when images load
+
+### 3. Loading States
 
 The hook manages multiple states:
 
@@ -182,7 +247,7 @@ The hook manages multiple states:
 - **Loaded**: Image successfully loaded
 - **Error**: Image failed to load
 
-### 3. Preloading Strategy
+### 4. Preloading Strategy
 
 ```jsx
 rootMargin: "50px"; // Start loading 50px before image is visible
@@ -213,7 +278,81 @@ This creates a "buffer zone" so images start loading before they're actually vis
 
 ## Advanced Features
 
-### 1. Custom Placeholders
+### 1. Handling 302 Redirects
+
+The implementation properly handles 302 redirects from IPFS gateways:
+
+```jsx
+// ✅ Good - Handles redirects automatically
+<LazyImage
+  src="https://devedu.chainletter.io/ipfs/QmHash" // May return 302
+  alt="Image"
+/>
+
+// The hook automatically resolves the final URL:
+// 1. Makes HEAD request to original URL
+// 2. Follows 302 redirect if present
+// 3. Uses final URL for image loading
+```
+
+**How it works:**
+
+1. **URL Resolution**: Uses `fetch()` with `redirect: 'follow'` to resolve final URL
+2. **HEAD Request**: Avoids downloading full image during resolution
+3. **Fallback**: Uses original URL if resolution fails
+4. **Caching**: React Query doesn't interfere with image loading
+
+### 2. Obvious Loading Placeholders
+
+The new placeholder design is much more obvious and user-friendly:
+
+```jsx
+// ✅ Good - Clear loading indication
+<LazyImage
+  src={imageUrl}
+  placeholder={
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      bgcolor: 'grey.100',
+      border: '2px dashed grey.300',
+      borderRadius: 1,
+    }}>
+      <Image sx={{ fontSize: 48, color: 'grey.400', animation: 'pulse 2s infinite' }} />
+      <Typography>Loading Image...</Typography>
+      <CircularProgress />
+    </Box>
+  }
+/>
+
+// ❌ Bad - Subtle skeleton that's easy to miss
+<Skeleton variant="rectangular" width={width} height={height} />
+```
+
+**Benefits of Obvious Placeholders:**
+
+- **Clear Loading State**: Users immediately know an image is loading
+- **Visual Feedback**: Pulsing icon and spinner show active loading
+- **Professional Look**: Dashed border and centered layout look polished
+- **Hover Effects**: Subtle interactions make the interface feel responsive
+
+### 3. Compact Mode for File Cards
+
+For smaller images like file thumbnails, use compact mode:
+
+```jsx
+<LazyImage
+  src={imageUrl}
+  alt={fileName}
+  width="100%"
+  height="200"
+  compact={true} // Uses smaller placeholder
+  sx={{ objectFit: "contain" }}
+/>
+```
+
+### 4. Custom Placeholders
 
 ```jsx
 <LazyImage
@@ -232,7 +371,7 @@ This creates a "buffer zone" so images start loading before they're actually vis
 />
 ```
 
-### 2. Error Handling
+### 5. Error Handling
 
 ```jsx
 <LazyImage
@@ -245,7 +384,7 @@ This creates a "buffer zone" so images start loading before they're actually vis
 />
 ```
 
-### 3. Custom Intersection Options
+### 6. Custom Intersection Options
 
 ```jsx
 <LazyImage

@@ -72,8 +72,11 @@ const FilesPage = () => {
   // Process files to determine stamping status
   const files = (filesData?.files || []).map((file) => ({
     ...file,
-    // If foreign_tx_id exists, file is stamped
-    is_stamped: file.foreign_tx_id ? true : file.is_stamped || false,
+    // Use bulk_check.is_stamped for the freshest stamping status, fallback to file.is_stamped
+    is_stamped:
+      file.bulk_check?.is_stamped !== undefined
+        ? file.bulk_check.is_stamped
+        : file.is_stamped || false,
   }));
 
   // Extract group stats from the response
@@ -132,6 +135,12 @@ const FilesPage = () => {
     }
   };
 
+  const formatBulkId = (postmarkHash) => {
+    if (!postmarkHash) return null;
+    // Show first 8 characters followed by ...
+    return `${postmarkHash.substring(0, 8)}...`;
+  };
+
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -185,8 +194,8 @@ const FilesPage = () => {
   };
 
   const FileCard = ({ file }) => {
-    // Determine if file is stamped - check both is_stamped and foreign_tx_id
-    const isStamped = file.foreign_tx_id ? true : file.is_stamped || false;
+    // Use is_stamped directly from the API
+    const isStamped = file.is_stamped || false;
 
     return (
       <Card
@@ -210,11 +219,13 @@ const FilesPage = () => {
             }
             alt={file.name}
             width="100%"
-            height="200"
+            height="200px"
+            compact={true}
             sx={{
               objectFit: "contain",
               backgroundColor: "#f5f5f5",
               borderBottom: "1px solid #e0e0e0",
+              minHeight: "200px", // Ensure consistent height
             }}
           />
         )}
@@ -242,6 +253,14 @@ const FilesPage = () => {
               icon={isStamped ? <CheckCircle /> : <Cancel />}
               size="small"
             />
+            {file.bulk_check?.postmark_hash && (
+              <Chip
+                label={`Hash: ${formatBulkId(file.bulk_check.postmark_hash)}`}
+                color="info"
+                size="small"
+                variant="outlined"
+              />
+            )}
           </Box>
         </CardContent>
       </Card>
@@ -289,71 +308,62 @@ const FilesPage = () => {
       </Box>
 
       {/* Group Statistics */}
-      {statsLoading ? (
-        <Box display="flex" justifyContent="center" mb={3}>
-          <CircularProgress size={24} />
-          <Typography variant="body2" sx={{ ml: 1 }}>
-            Loading group statistics...
-          </Typography>
-        </Box>
-      ) : (
-        groupStats && (
-          <Card
-            sx={{
-              mb: 3,
-              backgroundColor: groupStats.allStamped ? "#f8fff8" : "#fff",
-            }}>
-            <CardContent>
-              <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between">
-                <Box display="flex" alignItems="center" gap={3}>
-                  <Box display="flex" alignItems="center">
-                    <InsertDriveFile
-                      sx={{ fontSize: 20, mr: 1, color: "text.secondary" }}
-                    />
-                    <Typography variant="h6" color="text.secondary">
-                      {groupStats.totalFiles} files
-                    </Typography>
-                  </Box>
-                  <Box display="flex" alignItems="center">
-                    {groupStats.allStamped ? (
-                      <CheckCircle
-                        sx={{ fontSize: 20, mr: 1, color: "success.main" }}
-                      />
-                    ) : (
-                      <Warning
-                        sx={{ fontSize: 20, mr: 1, color: "warning.main" }}
-                      />
-                    )}
-                    <Typography
-                      variant="h6"
-                      color={
-                        groupStats.allStamped ? "success.main" : "warning.main"
-                      }
-                      fontWeight="medium">
-                      {groupStats.stampedFiles} stamped
-                    </Typography>
-                  </Box>
-                  <Box display="flex" alignItems="center">
-                    <Typography variant="body2" color="text.secondary">
-                      Total size: {formatBytes(groupStats.totalSize)}
-                    </Typography>
-                  </Box>
-                </Box>
-                {groupStats.allStamped && (
-                  <Chip
-                    label="All Files Stamped"
-                    color="success"
-                    icon={<CheckCircle />}
-                    size="medium"
+      {groupStats && (
+        <Card
+          sx={{
+            mb: 3,
+            backgroundColor: groupStats.allStamped ? "#f8fff8" : "#fff",
+          }}>
+          <CardContent>
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between">
+              <Box display="flex" alignItems="center" gap={3}>
+                <Box display="flex" alignItems="center">
+                  <InsertDriveFile
+                    sx={{ fontSize: 20, mr: 1, color: "text.secondary" }}
                   />
-                )}
+                  <Typography variant="h6" color="text.secondary">
+                    {groupStats.totalFiles} files
+                  </Typography>
+                </Box>
+                <Box display="flex" alignItems="center">
+                  {groupStats.allStamped ? (
+                    <CheckCircle
+                      sx={{ fontSize: 20, mr: 1, color: "success.main" }}
+                    />
+                  ) : (
+                    <Warning
+                      sx={{ fontSize: 20, mr: 1, color: "warning.main" }}
+                    />
+                  )}
+                  <Typography
+                    variant="h6"
+                    color={
+                      groupStats.allStamped ? "success.main" : "warning.main"
+                    }
+                    fontWeight="medium">
+                    {groupStats.stampedFiles} stamped
+                  </Typography>
+                </Box>
+                <Box display="flex" alignItems="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Total size: {formatBytes(groupStats.totalSize)}
+                  </Typography>
+                </Box>
               </Box>
-            </CardContent>
-          </Card>
-        )
+              {groupStats.allStamped && (
+                <Chip
+                  label="All Files Stamped"
+                  color="success"
+                  icon={<CheckCircle />}
+                  size="medium"
+                />
+              )}
+            </Box>
+          </CardContent>
+        </Card>
       )}
 
       {filesError && (

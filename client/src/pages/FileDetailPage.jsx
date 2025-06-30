@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
@@ -33,16 +33,16 @@ import {
 } from "@mui/icons-material";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { useFileInfo, useDeleteFile } from "../hooks/useApi";
+import { useFileInfo, useDeleteFile, useJsonContent } from "../hooks/useApi";
 import LazyImage from "../components/LazyImage";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getFileInfo, deleteFile, proxyContent } from "../services/api";
 
 const FileDetailPage = () => {
   const { hash } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [jsonContent, setJsonContent] = useState(null);
-  const [jsonLoading, setJsonLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -51,6 +51,10 @@ const FileDetailPage = () => {
 
   // Use React Query hook for file info
   const { data: apiFileInfo, isLoading, error } = useFileInfo(hash);
+
+  // Check if this is a 400 error (file not stamped) vs a real error
+  const isUnstampedFile = error?.response?.status === 400;
+  const isRealError = error && !isUnstampedFile;
 
   // Merge API data with navigation state data
   const existingData = location.state?.fileData || {};
@@ -62,23 +66,31 @@ const FileDetailPage = () => {
         size: apiFileInfo.data.size || existingData.size,
         network: apiFileInfo.data.network || existingData.network,
         gatewayurl: apiFileInfo.data.gatewayurl || existingData.gatewayurl,
-        // Determine stamping status: if foreign_tx_id exists, file is stamped
-        is_stamped: apiFileInfo.data.foreign_tx_id
-          ? true
-          : apiFileInfo.data.is_stamped !== undefined
-          ? apiFileInfo.data.is_stamped
-          : existingData.is_stamped,
+        // Use bulk_check.is_stamped for freshest status, fallback to file.is_stamped
+        is_stamped:
+          apiFileInfo.data.bulk_check?.is_stamped !== undefined
+            ? apiFileInfo.data.bulk_check.is_stamped
+            : apiFileInfo.data.is_stamped !== undefined
+            ? apiFileInfo.data.is_stamped
+            : existingData.is_stamped,
+      }
+    : isUnstampedFile
+    ? {
+        // For unstamped files, use navigation state data and mark as unstamped
+        ...existingData,
+        is_stamped: false,
       }
     : existingData;
 
+  // Use React Query hook for JSON content
+  const {
+    data: jsonContent,
+    isLoading: jsonLoading,
+    error: jsonError,
+  } = useJsonContent(fileInfo);
+
   // Use React Query mutation for delete
   const deleteMutation = useDeleteFile();
-
-  useEffect(() => {
-    if (fileInfo && isJsonFile(fileInfo.name)) {
-      fetchJsonContent();
-    }
-  }, [fileInfo]);
 
   const formatBytes = (bytes) => {
     if (bytes === 0) return "0 Bytes";
@@ -124,25 +136,13 @@ const FileDetailPage = () => {
     return `${gatewayUrl}${separator}img-width=${width}`;
   };
 
-  const fetchJsonContent = async () => {
-    if (!isJsonFile(fileInfo.name)) return;
-
-    setJsonLoading(true);
-    try {
-      const url = getResizedImageUrl(fileInfo.gatewayurl);
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Failed to fetch JSON content");
-      }
-      const text = await response.text();
-      const parsed = JSON.parse(text);
-      setJsonContent(parsed);
-    } catch (err) {
-      console.error("Error fetching JSON:", err);
-      setJsonContent(null);
-    } finally {
-      setJsonLoading(false);
+  const getOriginalUrl = (gatewayUrl) => {
+    if (!gatewayUrl) {
+      // Fallback to ipfs.io if no gateway URL is provided
+      return `https://ipfs.io/ipfs/${hash}`;
     }
+    // Return the original URL without any parameters
+    return gatewayUrl;
   };
 
   const getNetworkColor = (network) => {
@@ -200,7 +200,7 @@ const FileDetailPage = () => {
     );
   }
 
-  if (error) {
+  if (isRealError) {
     return (
       <Box>
         <Button
@@ -270,6 +270,18 @@ const FileDetailPage = () => {
                       borderRadius={1}>
                       <CircularProgress />
                     </Box>
+                  ) : jsonError ? (
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      height="400"
+                      bgcolor="grey.100"
+                      borderRadius={1}>
+                      <Typography variant="h6" color="error">
+                        Failed to load JSON content: {jsonError.message}
+                      </Typography>
+                    </Box>
                   ) : jsonContent ? (
                     <Box
                       sx={{
@@ -301,7 +313,7 @@ const FileDetailPage = () => {
                       bgcolor="grey.100"
                       borderRadius={1}>
                       <Typography variant="h6" color="text.secondary">
-                        Failed to load JSON content
+                        No JSON content available
                       </Typography>
                     </Box>
                   )}
@@ -311,14 +323,15 @@ const FileDetailPage = () => {
                   display="flex"
                   alignItems="center"
                   justifyContent="center"
-                  height="400"
+                  height="600px"
                   bgcolor="grey.100"
-                  borderRadius={1}>
+                  borderRadius={1}
+                  sx={{ minHeight: "600px" }}>
                   <iframe
-                    src={getResizedImageUrl(fileInfo.gatewayurl)}
+                    src={getOriginalUrl(fileInfo.gatewayurl)}
                     width="100%"
                     height="100%"
-                    style={{ border: "none" }}
+                    style={{ border: "none", borderRadius: "4px" }}
                   />
                 </Box>
               ) : (
@@ -351,6 +364,14 @@ const FileDetailPage = () => {
                   {fileInfo.name || "Unknown File"}
                 </Typography>
               </Box>
+
+              {/* Notice for unstamped files */}
+              {isUnstampedFile && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  This file is not stamped. Detailed verification information is
+                  only available for stamped files.
+                </Alert>
+              )}
 
               <Grid container spacing={2}>
                 <Grid item xs={12}>
@@ -392,24 +413,6 @@ const FileDetailPage = () => {
                       <Typography variant="body1">
                         <strong>Created:</strong> {formatDate(fileInfo.created)}
                       </Typography>
-                    </Box>
-                  </Grid>
-                )}
-
-                {fileInfo.foreign_tx_id && (
-                  <Grid item xs={12}>
-                    <Box display="flex" alignItems="center" mb={1}>
-                      <Link sx={{ mr: 1, color: "text.secondary" }} />
-                      <Typography variant="body1">
-                        <strong>Transaction ID:</strong>{" "}
-                        {fileInfo.foreign_tx_id}
-                      </Typography>
-                      <Button
-                        size="small"
-                        onClick={() => copyToClipboard(fileInfo.foreign_tx_id)}
-                        sx={{ ml: 1 }}>
-                        Copy
-                      </Button>
                     </Box>
                   </Grid>
                 )}

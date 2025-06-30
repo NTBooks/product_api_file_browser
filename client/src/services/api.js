@@ -5,9 +5,24 @@ const API_BASE_URL = '/api'
 // Configure axios to include credentials for session support
 axios.defaults.withCredentials = true
 
-// Add response interceptor to handle authentication errors
+// Configure axios to handle redirects properly
+axios.defaults.maxRedirects = 5 // Allow up to 5 redirects
+axios.defaults.validateStatus = (status) => {
+    // Accept 2xx and 3xx status codes (including redirects)
+    return status >= 200 && status < 400
+}
+
+// Add response interceptor to handle authentication errors and redirects
 axios.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Handle 302 redirects by following them
+        if (response.status === 302 && response.headers.location) {
+            console.log('Following 302 redirect to:', response.headers.location)
+            // The browser will automatically follow the redirect
+            return response
+        }
+        return response
+    },
     (error) => {
         if (error.response?.data?.code === 'AUTH_ERROR' ||
             error.response?.status === 401 ||
@@ -15,6 +30,12 @@ axios.interceptors.response.use(
             // Clear any stored credentials on auth errors
             console.log('Authentication error detected, clearing credentials')
         }
+
+        // Log redirect errors for debugging
+        if (error.response?.status === 302) {
+            console.log('302 redirect detected:', error.response.headers.location)
+        }
+
         return Promise.reject(error)
     }
 )
@@ -137,5 +158,14 @@ export const stampCollection = async (groupId) => {
 // Get group statistics
 export const getGroupStats = async (groupId) => {
     const response = await axios.get(`${API_BASE_URL}/group-stats/${groupId}`)
+    return response.data
+}
+
+// Proxy content from IPFS gateway to avoid CORS issues
+export const proxyContent = async (url) => {
+    const response = await axios.get(`${API_BASE_URL}/proxy-content`, {
+        params: { url },
+        responseType: 'text' // Ensure we get raw text, not parsed JSON
+    })
     return response.data
 } 

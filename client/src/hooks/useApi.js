@@ -7,6 +7,7 @@ import {
     uploadFile,
     deleteFile,
     stampCollection,
+    proxyContent,
 } from "../services/api";
 
 // Query keys for consistent caching
@@ -120,4 +121,37 @@ export const useStampCollection = () => {
             console.error("Stamping failed:", error);
         },
     });
+};
+
+// Hook for fetching JSON content
+export const useJsonContent = (fileInfo) => {
+    return useQuery({
+        queryKey: ['jsonContent', fileInfo?.gatewayurl],
+        queryFn: async () => {
+            if (!fileInfo?.gatewayurl) {
+                throw new Error('No gateway URL provided');
+            }
+
+            console.log('Fetching JSON content via React Query:', fileInfo.gatewayurl);
+            const response = await proxyContent(fileInfo.gatewayurl);
+            console.log('JSON response received, length:', response.length);
+
+            // Parse the JSON and return it
+            const parsed = JSON.parse(response);
+            console.log('JSON parsed successfully');
+            return parsed;
+        },
+        enabled: !!fileInfo?.gatewayurl && isJsonFile(fileInfo.name),
+        staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+        cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+        retry: 2, // Retry up to 2 times on failure
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    });
+};
+
+// Helper function to check if file is JSON
+const isJsonFile = (fileName) => {
+    if (!fileName) return false;
+    const extension = fileName.split(".").pop()?.toLowerCase();
+    return extension === "json";
 }; 

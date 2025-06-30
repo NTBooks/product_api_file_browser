@@ -21,8 +21,25 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       cacheTime: 10 * 60 * 1000, // 10 minutes
-      retry: 1,
+      retry: (failureCount, error) => {
+        // Don't retry on 302 redirects - they should be handled by the browser
+        if (error?.response?.status === 302) {
+          return false;
+        }
+        return failureCount < 1; // Only retry once for other errors
+      },
       refetchOnWindowFocus: false,
+      // Handle redirects properly
+      networkMode: "online",
+    },
+    mutations: {
+      retry: (failureCount, error) => {
+        // Don't retry on 302 redirects
+        if (error?.response?.status === 302) {
+          return false;
+        }
+        return failureCount < 1;
+      },
     },
   },
 });
