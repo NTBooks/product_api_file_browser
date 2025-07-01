@@ -9,7 +9,7 @@ async function uploadAndStamp() {
             method: 'POST',
             headers: {
                 'secret-key': process.env.API_SECRET,
-                'group-id': 'Timestamp Demo2',
+                'group-id': 'Timestamps',
                 'network': 'public',
                 'stamp-immediately': 'true'
             },

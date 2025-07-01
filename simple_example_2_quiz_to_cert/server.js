@@ -156,7 +156,7 @@ app.post('/api/submit-quiz', async (req, res) => {
         await fs.writeFile(certPath, certBuffer);
 
         // Upload certificate file (creates collection if it doesn't exist)
-        const collectionName = 'Course Complete';
+        const collectionName = 'Cert Demo';
         const FormData = require('form-data');
         const formData = new FormData();
         formData.append('file', certBuffer, {
@@ -264,7 +264,7 @@ app.get('/api/file-status/:hash', async (req, res) => {
                 headers: {
                     'secret-key': API_SECRET,
                     'network': API_NETWORK,
-                    'group-id': 'Course Complete'
+                    'group-id': 'Cert Demo'
                 }
             });
 
@@ -284,7 +284,7 @@ app.get('/api/file-status/:hash', async (req, res) => {
                         res.status(404).json({
                             success: false,
                             message: 'File not found in collection',
-                            error: 'File hash not found in Course Complete collection'
+                            error: 'File hash not found in Cert Demo collection'
                         });
                     }
                 } else {

@@ -33,7 +33,12 @@ import {
 } from "@mui/icons-material";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { useFileInfo, useDeleteFile, useJsonContent } from "../hooks/useApi";
+import {
+  useFileInfo,
+  useDeleteFile,
+  useJsonContent,
+  useTextContent,
+} from "../hooks/useApi";
 import LazyImage from "../components/LazyImage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getFileInfo, deleteFile, proxyContent } from "../services/api";
@@ -89,6 +94,13 @@ const FileDetailPage = () => {
     error: jsonError,
   } = useJsonContent(fileInfo);
 
+  // Use React Query hook for text content
+  const {
+    data: textContent,
+    isLoading: textLoading,
+    error: textError,
+  } = useTextContent(fileInfo);
+
   // Use React Query mutation for delete
   const deleteMutation = useDeleteFile();
 
@@ -114,6 +126,36 @@ const FileDetailPage = () => {
     if (!fileName) return false;
     const extension = fileName.split(".").pop()?.toLowerCase();
     return extension === "json";
+  };
+
+  const isTextFile = (fileName) => {
+    if (!fileName) return false;
+    const extension = fileName.split(".").pop()?.toLowerCase();
+    return [
+      "txt",
+      "md",
+      "log",
+      "csv",
+      "xml",
+      "html",
+      "css",
+      "js",
+      "ts",
+      "py",
+      "java",
+      "cpp",
+      "c",
+      "h",
+      "sql",
+      "sh",
+      "bat",
+      "yml",
+      "yaml",
+      "toml",
+      "ini",
+      "cfg",
+      "conf",
+    ].includes(extension);
   };
 
   const isPdfFile = (fileName) => {
@@ -334,6 +376,69 @@ const FileDetailPage = () => {
                       borderRadius={1}>
                       <Typography variant="h6" color="text.secondary">
                         No JSON content available
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              ) : isTextFile(fileInfo.name) ? (
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    Text Content
+                  </Typography>
+                  {textLoading ? (
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      height="400"
+                      bgcolor="grey.100"
+                      borderRadius={1}>
+                      <CircularProgress />
+                    </Box>
+                  ) : textError ? (
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      height="400"
+                      bgcolor="grey.100"
+                      borderRadius={1}>
+                      <Typography variant="h6" color="error">
+                        Failed to load text content: {textError.message}
+                      </Typography>
+                    </Box>
+                  ) : textContent ? (
+                    <Box
+                      sx={{
+                        maxHeight: "400px",
+                        overflow: "auto",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 1,
+                        bgcolor: "#f8f9fa",
+                        p: 2,
+                      }}>
+                      <Typography
+                        component="pre"
+                        sx={{
+                          fontFamily: "monospace",
+                          fontSize: "12px",
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                          margin: 0,
+                        }}>
+                        {textContent}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      height="400"
+                      bgcolor="grey.100"
+                      borderRadius={1}>
+                      <Typography variant="h6" color="text.secondary">
+                        No text content available
                       </Typography>
                     </Box>
                   )}

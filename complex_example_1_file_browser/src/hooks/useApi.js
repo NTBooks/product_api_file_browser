@@ -149,9 +149,39 @@ export const useJsonContent = (fileInfo) => {
     });
 };
 
+// Hook for fetching text content
+export const useTextContent = (fileInfo) => {
+    return useQuery({
+        queryKey: ['textContent', fileInfo?.gatewayurl],
+        queryFn: async () => {
+            if (!fileInfo?.gatewayurl) {
+                throw new Error('No gateway URL provided');
+            }
+
+            console.log('Fetching text content via React Query:', fileInfo.gatewayurl);
+            const response = await proxyContent(fileInfo.gatewayurl);
+            console.log('Text response received, length:', response.length);
+
+            return response;
+        },
+        enabled: !!fileInfo?.gatewayurl && isTextFile(fileInfo.name),
+        staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+        cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+        retry: 2, // Retry up to 2 times on failure
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    });
+};
+
 // Helper function to check if file is JSON
 const isJsonFile = (fileName) => {
     if (!fileName) return false;
     const extension = fileName.split(".").pop()?.toLowerCase();
     return extension === "json";
+};
+
+// Helper function to check if file is text
+const isTextFile = (fileName) => {
+    if (!fileName) return false;
+    const extension = fileName.split(".").pop()?.toLowerCase();
+    return ["txt", "md", "log", "csv", "xml", "html", "css", "js", "ts", "py", "java", "cpp", "c", "h", "sql", "sh", "bat", "yml", "yaml", "toml", "ini", "cfg", "conf"].includes(extension);
 }; 
