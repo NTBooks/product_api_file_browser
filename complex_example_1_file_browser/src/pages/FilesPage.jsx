@@ -79,12 +79,30 @@ const FilesPage = () => {
         : file.is_stamped || false,
   }));
 
-  // Extract group stats from the response
-  const groupStats = groupStatsData?.data;
+  // Extract group stats from the response and enhance with files data
+  const baseGroupStats = groupStatsData?.data;
+
+  // Calculate counts from the actual files list being displayed
+  const totalFilesCount = files.length;
+  const stampedFilesCount = files.filter((file) => file.is_stamped).length;
+
+  // Enhanced group stats with calculated counts from files list
+  // Show "Counting..." if either stats or files are still loading
+  const groupStats =
+    baseGroupStats && !statsLoading && !filesLoading
+      ? {
+          ...baseGroupStats,
+          totalFiles: totalFilesCount,
+          stampedFiles: stampedFilesCount,
+          allStamped:
+            totalFilesCount > 0 && totalFilesCount === stampedFilesCount,
+        }
+      : null;
 
   // Debug logging
-  console.log("Group stats data:", groupStatsData);
-  console.log("Extracted group stats:", groupStats);
+  console.log("Base group stats data:", groupStatsData);
+  console.log("Enhanced group stats:", groupStats);
+  console.log("Stamped files count:", stampedFilesCount);
 
   const formatBytes = (bytes) => {
     if (bytes === 0) return "0 Bytes";
@@ -310,63 +328,72 @@ const FilesPage = () => {
       </Box>
 
       {/* Group Statistics */}
-      {groupStats && (
-        <Card
-          sx={{
-            mb: 3,
-            backgroundColor: groupStats.allStamped ? "#f8fff8" : "#fff",
-          }}>
-          <CardContent>
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between">
-              <Box display="flex" alignItems="center" gap={3}>
+      <Card
+        sx={{
+          mb: 3,
+          backgroundColor: groupStats?.allStamped ? "#f8fff8" : "#fff",
+        }}>
+        <CardContent>
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between">
+            <Box display="flex" alignItems="center" gap={3}>
+              {groupStats ? (
+                <>
+                  <Box display="flex" alignItems="center">
+                    <InsertDriveFile
+                      sx={{ fontSize: 20, mr: 1, color: "text.secondary" }}
+                    />
+                    <Typography variant="h6" color="text.secondary">
+                      {groupStats.totalFiles} files
+                    </Typography>
+                  </Box>
+                  <Box display="flex" alignItems="center">
+                    {groupStats.allStamped ? (
+                      <CheckCircle
+                        sx={{ fontSize: 20, mr: 1, color: "success.main" }}
+                      />
+                    ) : (
+                      <Warning
+                        sx={{ fontSize: 20, mr: 1, color: "warning.main" }}
+                      />
+                    )}
+                    <Typography
+                      variant="h6"
+                      color={
+                        groupStats.allStamped ? "success.main" : "warning.main"
+                      }
+                      fontWeight="medium">
+                      {groupStats.stampedFiles} stamped
+                    </Typography>
+                  </Box>
+                  <Box display="flex" alignItems="center">
+                    <Typography variant="body2" color="text.secondary">
+                      Total size: {formatBytes(groupStats.totalSize)}
+                    </Typography>
+                  </Box>
+                </>
+              ) : (
                 <Box display="flex" alignItems="center">
-                  <InsertDriveFile
-                    sx={{ fontSize: 20, mr: 1, color: "text.secondary" }}
-                  />
+                  <CircularProgress size={20} sx={{ mr: 1 }} />
                   <Typography variant="h6" color="text.secondary">
-                    {groupStats.totalFiles} files
+                    Loading...
                   </Typography>
                 </Box>
-                <Box display="flex" alignItems="center">
-                  {groupStats.allStamped ? (
-                    <CheckCircle
-                      sx={{ fontSize: 20, mr: 1, color: "success.main" }}
-                    />
-                  ) : (
-                    <Warning
-                      sx={{ fontSize: 20, mr: 1, color: "warning.main" }}
-                    />
-                  )}
-                  <Typography
-                    variant="h6"
-                    color={
-                      groupStats.allStamped ? "success.main" : "warning.main"
-                    }
-                    fontWeight="medium">
-                    {groupStats.stampedFiles} stamped
-                  </Typography>
-                </Box>
-                <Box display="flex" alignItems="center">
-                  <Typography variant="body2" color="text.secondary">
-                    Total size: {formatBytes(groupStats.totalSize)}
-                  </Typography>
-                </Box>
-              </Box>
-              {groupStats.allStamped && (
-                <Chip
-                  label="All Files Stamped"
-                  color="success"
-                  icon={<CheckCircle />}
-                  size="medium"
-                />
               )}
             </Box>
-          </CardContent>
-        </Card>
-      )}
+            {groupStats?.allStamped && (
+              <Chip
+                label="All Files Stamped"
+                color="success"
+                icon={<CheckCircle />}
+                size="medium"
+              />
+            )}
+          </Box>
+        </CardContent>
+      </Card>
 
       {filesError && (
         <Alert severity="error" sx={{ mb: 3 }}>

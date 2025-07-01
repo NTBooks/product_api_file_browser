@@ -8,7 +8,10 @@
         "server": "cd server && npm run dev",
         "client": "cd complex_example_1_file_browser && npm run dev",
         "build": "cd complex_example_1_file_browser && npm run build",
-        "install-all": "npm install && cd complex_example_1_file_browser && npm install && cd ../server && npm install"
+        "install-all": "npm install && cd complex_example_1_file_browser && npm install && cd ../server && npm install",
+        "ex1": "concurrently \"npm run server\" \"npm run client\"",
+        "ex2": "cd simple_example_2_quiz_to_cert && npm start",
+        "ex3": "cd simplest_example_3_upload_and_stamp && npm start"
     },
     "keywords": [
         "file-browser",

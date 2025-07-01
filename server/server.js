@@ -4,7 +4,8 @@ const multer = require('multer');
 const axios = require('axios');
 const session = require('express-session');
 const FormData = require('form-data');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -31,7 +32,7 @@ app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage() });
 
 // API base URL
-const API_BASE_URL = 'https://debugproxydev.chaincart.io';
+const API_BASE_URL = process.env.API_BASE_URL;
 
 // Check if hardcoded credentials are available
 const hasHardcodedCredentials = () => {
@@ -203,7 +204,7 @@ app.get('/api/stats', requireCredentials, async (req, res) => {
             groupEnabled: response.headers['x-group-enabled'] === 'true',
             groupExists: response.headers['x-group-exists'],
             groupPublic: response.headers['x-group-public'],
-            stampedFiles: parseInt(response.headers['x-stamped-files']) || 0,
+            stampedFiles: 0, // X-Stamped-Files header was removed, will be calculated from files list
             totalFiles: parseInt(response.headers['x-total-files']) || 0,
             totalSize: parseInt(response.headers['x-total-size']) || 0
         };
@@ -448,13 +449,8 @@ app.get('/api/group-stats/:groupId', requireCredentials, async (req, res) => {
 
         const stats = {
             totalFiles: parseInt(response.headers['x-total-files']) || 0,
-            stampedFiles: parseInt(response.headers['x-stamped-files']) || 0,
-            totalSize: parseInt(response.headers['x-total-size']) || 0,
-            allStamped: false
+            totalSize: parseInt(response.headers['x-total-size']) || 0
         };
-
-        // Calculate if all files are stamped
-        stats.allStamped = stats.totalFiles > 0 && stats.totalFiles === stats.stampedFiles;
 
         console.log(`Group ${groupId} stats:`, stats); // Debug log
 

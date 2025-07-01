@@ -1,0 +1,20 @@
+{
+    "name": "timestamp-upload-stamp-demo",
+    "version": "1.0.0",
+    "description": "Minimal example: create timestamp file, upload, and stamp collection",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "dotenv": "^16.6.1"
+    },
+    "keywords": [
+        "api",
+        "demo",
+        "upload",
+        "stamp"
+    ],
+    "author": "",
+    "license": "MIT"
+}

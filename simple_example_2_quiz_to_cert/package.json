@@ -1,0 +1,23 @@
+{
+    "name": "quiz-to-cert-demo",
+    "version": "1.0.0",
+    "description": "Simple quiz that generates and uploads certificates",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node server.js"
+    },
+    "dependencies": {
+        "express": "^4.18.2",
+        "sharp": "^0.32.6",
+        "dotenv": "^16.3.1",
+        "form-data": "^4.0.0"
+    },
+    "keywords": [
+        "quiz",
+        "certificate",
+        "demo"
+    ],
+    "author": "",
+    "license": "MIT"
+}
