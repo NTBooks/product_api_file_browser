@@ -35,7 +35,7 @@ The simplest possible example of the Chainletter API: create a timestamp file, u
 ✅ Uploaded timestamp.txt
    File hash: QmHash...
 ✅ Stamped 1 files
-   Postmark hash: pm_hash_abc123
+   Stamp hash: pm_hash_abc123
 🎉 Demo completed successfully!
 ```
 

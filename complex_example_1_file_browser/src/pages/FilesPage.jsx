@@ -153,10 +153,10 @@ const FilesPage = () => {
     }
   };
 
-  const formatBulkId = (postmarkHash) => {
-    if (!postmarkHash) return null;
+  const formatBulkId = (stampHash) => {
+    if (!stampHash) return null;
     // Show first 8 characters followed by ...
-    return `${postmarkHash.substring(0, 8)}...`;
+    return `${stampHash.substring(0, 8)}...`;
   };
 
   const handleFileSelect = (event) => {
@@ -275,7 +275,7 @@ const FilesPage = () => {
             />
             {file.bulk_check?.postmark_hash && (
               <Chip
-                label={`Hash: ${formatBulkId(file.bulk_check.postmark_hash)}`}
+                label={`Stamp: ${formatBulkId(file.bulk_check.postmark_hash)}`}
                 color="info"
                 size="small"
                 variant="outlined"
@@ -321,8 +321,9 @@ const FilesPage = () => {
             variant="contained"
             color="secondary"
             startIcon={<Verified />}
-            onClick={handleStampCollection}>
-            Stamp Collection
+            onClick={handleStampCollection}
+            disabled={groupStats?.allStamped || stampMutation.isPending}>
+            {stampMutation.isPending ? "Stamping..." : "Stamp Collection"}
           </Button>
         </Box>
       </Box>

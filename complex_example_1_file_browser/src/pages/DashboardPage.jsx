@@ -310,22 +310,14 @@ const DashboardPage = () => {
         </Box>
       ) : stats ? (
         <Grid container spacing={3}>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={4}>
             <StatCard
               title="Total Files"
               value={stats.totalFiles}
               icon={<Storage color="primary" />}
             />
           </Grid>
-          <Grid item xs={12} md={3}>
-            <StatCard
-              title="Stamped Files"
-              value={stats.stampedFiles}
-              icon={<CheckCircle color="success" />}
-              color="success"
-            />
-          </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={4}>
             <StatCard
               title="Total Size"
               value={formatBytes(stats.totalSize)}
@@ -333,7 +325,7 @@ const DashboardPage = () => {
               color="info"
             />
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={4}>
             <StatCard
               title="Credits"
               value={stats.credits}
