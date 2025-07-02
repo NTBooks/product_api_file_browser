@@ -31,8 +31,27 @@ import {
   CheckCircle,
   Warning,
 } from "@mui/icons-material";
-import { useGroups, useStampCollection } from "../hooks/useApi";
+import { useGroups } from "../hooks/useApi";
 import { createGroup } from "../services/api";
+import {
+  flexSpaceBetween,
+  flexCenterVertical,
+  flexGap,
+  flexGapWrap,
+  flexCenter,
+  iconWithMargin,
+  iconSecondary,
+  marginBottom,
+  marginTop,
+  loadingContainer,
+  errorContainer,
+  cardFullHeight,
+  textWithMargin,
+  textSecondary,
+  buttonWithMargin,
+  alertWithMargin,
+  fullWidth,
+} from "../utils/commonStyles";
 
 const GroupsPage = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -85,7 +104,7 @@ const GroupsPage = () => {
     return (
       <Card
         sx={{
-          height: "100%",
+          ...cardFullHeight,
           cursor: "pointer",
           transition: "transform 0.2s, box-shadow 0.2s",
           "&:hover": {
@@ -95,35 +114,33 @@ const GroupsPage = () => {
         }}
         onClick={() => navigate(`/files/${group.id}`)}>
         <CardContent>
-          <Box display="flex" alignItems="center" mb={2}>
-            <Folder color="primary" sx={{ fontSize: 40, mr: 2 }} />
+          <Box sx={{ ...flexCenterVertical, ...marginBottom(2) }}>
+            <Folder color="primary" sx={iconWithMargin(40, 2)} />
             <Box flex={1}>
               <Typography variant="h6" component="div" noWrap>
                 {group.name}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={textSecondary}>
                 ID: {group.id}
               </Typography>
             </Box>
           </Box>
 
-          <Box display="flex" alignItems="center" mb={1}>
-            <Person sx={{ fontSize: 16, mr: 1, color: "text.secondary" }} />
-            <Typography variant="body2" color="text.secondary">
+          <Box sx={{ ...flexCenterVertical, ...marginBottom(1) }}>
+            <Person sx={iconSecondary(16, 1)} />
+            <Typography variant="body2" sx={textSecondary}>
               {group.user_id}
             </Typography>
           </Box>
 
-          <Box display="flex" alignItems="center" mb={2}>
-            <CalendarToday
-              sx={{ fontSize: 16, mr: 1, color: "text.secondary" }}
-            />
-            <Typography variant="body2" color="text.secondary">
+          <Box sx={{ ...flexCenterVertical, ...marginBottom(2) }}>
+            <CalendarToday sx={iconSecondary(16, 1)} />
+            <Typography variant="body2" sx={textSecondary}>
               Created: {formatDate(group.createdAt)}
             </Typography>
           </Box>
 
-          <Box display="flex" gap={1} flexWrap="wrap">
+          <Box sx={flexGapWrap(1)}>
             <Chip
               label={group.network}
               color={getNetworkColor(group.network)}
@@ -137,13 +154,9 @@ const GroupsPage = () => {
 
   return (
     <Box>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}>
+      <Box sx={{ ...flexSpaceBetween, ...marginBottom(3) }}>
         <Typography variant="h4">Groups</Typography>
-        <Box display="flex" gap={2}>
+        <Box sx={flexGap(2)}>
           <Button
             variant="outlined"
             startIcon={<Refresh />}
@@ -161,13 +174,13 @@ const GroupsPage = () => {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={errorContainer}>
           {error.message || "Failed to fetch groups"}
         </Alert>
       )}
 
       {isLoading ? (
-        <Box display="flex" justifyContent="center" p={4}>
+        <Box sx={loadingContainer}>
           <CircularProgress />
         </Box>
       ) : groups.length > 0 ? (
@@ -192,7 +205,7 @@ const GroupsPage = () => {
         fullWidth>
         <DialogTitle>Create New Group</DialogTitle>
         <DialogContent>
-          <Box sx={{ mt: 2 }}>
+          <Box sx={marginTop(2)}>
             <TextField
               fullWidth
               label="Group Name"
@@ -200,7 +213,7 @@ const GroupsPage = () => {
               onChange={(e) =>
                 setNewGroup({ ...newGroup, name: e.target.value })
               }
-              sx={{ mb: 2 }}
+              sx={marginBottom(2)}
             />
             <FormControl fullWidth>
               <InputLabel>Network</InputLabel>
@@ -235,7 +248,7 @@ const GroupsPage = () => {
         <Alert
           onClose={() => setSnackbar({ ...snackbar, open: false })}
           severity={snackbar.severity}
-          sx={{ width: "100%" }}>
+          sx={fullWidth}>
           {snackbar.message}
         </Alert>
       </Snackbar>

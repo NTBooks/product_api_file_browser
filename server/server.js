@@ -460,81 +460,48 @@ app.get('/api/group-stats/:groupId', requireCredentials, async (req, res) => {
     }
 });
 
-// GET /api/proxy-content - Proxy content from IPFS gateway to avoid CORS issues
-app.get('/api/proxy-content', async (req, res) => {
+
+
+// GET /ipfs - Proxy IPFS content to handle CORS and ORB issues
+app.get('/ipfs', async (req, res) => {
     try {
         const { url } = req.query;
 
         if (!url) {
-            return res.status(400).json({ success: false, message: 'URL parameter is required' });
+            return res.status(400).json({
+                success: false,
+                message: 'URL query parameter is required'
+            });
         }
 
-        console.log('Proxying content from:', url);
+        console.log(`Proxying IPFS content from: ${url}`);
 
         const response = await axios.get(url, {
-            responseType: 'text',
-            timeout: 10000, // 10 second timeout
+            responseType: 'stream',
+            timeout: 10000,
+            maxRedirects: 5,
             headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; FileBrowser/1.0)'
+                'User-Agent': 'Mozilla/5.0 (compatible; FileBrowser/1.0)',
+                'Accept': 'image/*,text/*,application/*,*/*',
+                'Cookie': 'maint_bypass=p00pp00p'
             }
         });
 
-        // Set appropriate content type based on the response
-        const contentType = response.headers['content-type'] || 'text/plain';
-        res.setHeader('Content-Type', contentType);
-
-        // Set CORS headers
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-        res.send(response.data);
-    } catch (error) {
-        console.error('Proxy content error:', error.message);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch content',
-            error: error.message
-        });
-    }
-});
-
-// GET /api/ipfs/* - Proxy IPFS content using service account token
-app.get('/api/ipfs/*', requireCredentials, async (req, res) => {
-    try {
-        const { apikey, secretKey, network } = getCredentialsFromSession(req);
-        const ipfsPath = req.params[0]; // Get the IPFS path after /api/ipfs/
-
-        if (!ipfsPath) {
-            return res.status(400).json({ success: false, message: 'IPFS path is required' });
-        }
-
-        console.log('Proxying IPFS content:', ipfsPath);
-
-        // Make request to the API server's IPFS endpoint
-        const response = await axios.get(`${API_BASE_URL}/ipfs/${ipfsPath}`, {
-            headers: {
-                'secret-key': secretKey,
-                'network': network,
-                'Authorization': `Bearer ${apikey}` // Use API key as Bearer token if needed
-            },
-            responseType: 'stream', // Stream the response for better performance
-            timeout: 30000 // 30 second timeout for IPFS content
-        });
-
-        // Forward the content type and other relevant headers
+        // Forward the response headers
         const contentType = response.headers['content-type'];
         const contentLength = response.headers['content-length'];
         const cacheControl = response.headers['cache-control'];
+        const etag = response.headers['etag'];
 
         if (contentType) res.setHeader('Content-Type', contentType);
         if (contentLength) res.setHeader('Content-Length', contentLength);
         if (cacheControl) res.setHeader('Cache-Control', cacheControl);
+        if (etag) res.setHeader('ETag', etag);
 
         // Set CORS headers
         res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Range');
 
         // Stream the response
         response.data.pipe(res);
@@ -542,19 +509,11 @@ app.get('/api/ipfs/*', requireCredentials, async (req, res) => {
     } catch (error) {
         console.error('IPFS proxy error:', error.message);
 
-        if (error.response?.status === 404) {
-            res.status(404).json({
-                success: false,
-                message: 'IPFS content not found',
-                error: 'Content not available on IPFS'
-            });
-        } else {
-            res.status(500).json({
-                success: false,
-                message: 'Failed to fetch IPFS content',
-                error: error.message
-            });
-        }
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch IPFS content',
+            error: error.message
+        });
     }
 });
 

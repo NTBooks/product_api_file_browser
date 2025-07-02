@@ -40,6 +40,26 @@ import {
   useStampCollection,
 } from "../hooks/useApi";
 import LazyImage from "../components/LazyImage";
+import {
+  flexSpaceBetween,
+  flexCenterVertical,
+  flexGap,
+  flexGapWrap,
+  flexCenter,
+  iconWithMargin,
+  iconSecondary,
+  marginBottom,
+  marginTop,
+  loadingContainer,
+  errorContainer,
+  cardFullHeight,
+  textWithMargin,
+  textSecondary,
+  buttonWithMargin,
+  alertWithMargin,
+  fullWidth,
+} from "../utils/commonStyles";
+import { toProxyUrl } from "../utils/ipfsUtils";
 
 const FilesPage = () => {
   const { groupId } = useParams();
@@ -218,7 +238,7 @@ const FilesPage = () => {
     return (
       <Card
         sx={{
-          height: "100%",
+          ...cardFullHeight,
           cursor: "pointer",
           transition: "transform 0.2s, box-shadow 0.2s",
           "&:hover": {
@@ -235,7 +255,7 @@ const FilesPage = () => {
           <LazyImage
             src={
               getResizedImageUrl(file.gatewayurl) ||
-              `https://ipfs.io/ipfs/${file.hash}`
+              toProxyUrl(`https://ipfs.io/ipfs/${file.hash}`)
             }
             alt={file.name}
             width="100%"
@@ -250,18 +270,24 @@ const FilesPage = () => {
           />
         )}
         <CardContent>
-          <Box display="flex" alignItems="center" mb={1}>
+          <Box sx={{ ...flexCenterVertical, ...marginBottom(1) }}>
             {getFileIcon(file.name)}
-            <Typography variant="h6" component="div" sx={{ ml: 1 }} noWrap>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={textWithMargin(1)}
+              noWrap>
               {file.name}
             </Typography>
           </Box>
 
-          <Typography variant="body2" color="text.secondary" mb={1}>
+          <Typography
+            variant="body2"
+            sx={{ ...textSecondary, ...marginBottom(1) }}>
             Size: {formatBytes(file.size)}
           </Typography>
 
-          <Box display="flex" gap={1} flexWrap="wrap">
+          <Box sx={flexGapWrap(1)}>
             <Chip
               label={file.network}
               color={getNetworkColor(file.network)}
@@ -289,12 +315,8 @@ const FilesPage = () => {
 
   return (
     <Box>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}>
-        <Box display="flex" alignItems="center" gap={2}>
+      <Box sx={{ ...flexSpaceBetween, ...marginBottom(3) }}>
+        <Box sx={flexGap(2)}>
           <Button
             variant="outlined"
             startIcon={<ArrowBack />}
@@ -303,7 +325,7 @@ const FilesPage = () => {
           </Button>
           <Typography variant="h4">Files in Group: {groupId}</Typography>
         </Box>
-        <Box display="flex" gap={2}>
+        <Box sx={flexGap(2)}>
           <Button
             variant="outlined"
             startIcon={<Refresh />}
@@ -335,30 +357,21 @@ const FilesPage = () => {
           backgroundColor: groupStats?.allStamped ? "#f8fff8" : "#fff",
         }}>
         <CardContent>
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between">
-            <Box display="flex" alignItems="center" gap={3}>
+          <Box sx={flexSpaceBetween}>
+            <Box sx={flexGap(3)}>
               {groupStats ? (
                 <>
-                  <Box display="flex" alignItems="center">
-                    <InsertDriveFile
-                      sx={{ fontSize: 20, mr: 1, color: "text.secondary" }}
-                    />
-                    <Typography variant="h6" color="text.secondary">
+                  <Box sx={flexCenterVertical}>
+                    <InsertDriveFile sx={iconSecondary(20, 1)} />
+                    <Typography variant="h6" sx={textSecondary}>
                       {groupStats.totalFiles} files
                     </Typography>
                   </Box>
-                  <Box display="flex" alignItems="center">
+                  <Box sx={flexCenterVertical}>
                     {groupStats.allStamped ? (
-                      <CheckCircle
-                        sx={{ fontSize: 20, mr: 1, color: "success.main" }}
-                      />
+                      <CheckCircle sx={iconWithMargin(20, 1, "success.main")} />
                     ) : (
-                      <Warning
-                        sx={{ fontSize: 20, mr: 1, color: "warning.main" }}
-                      />
+                      <Warning sx={iconWithMargin(20, 1, "warning.main")} />
                     )}
                     <Typography
                       variant="h6"
@@ -369,16 +382,16 @@ const FilesPage = () => {
                       {groupStats.stampedFiles} stamped
                     </Typography>
                   </Box>
-                  <Box display="flex" alignItems="center">
-                    <Typography variant="body2" color="text.secondary">
+                  <Box sx={flexCenterVertical}>
+                    <Typography variant="body2" sx={textSecondary}>
                       Total size: {formatBytes(groupStats.totalSize)}
                     </Typography>
                   </Box>
                 </>
               ) : (
-                <Box display="flex" alignItems="center">
-                  <CircularProgress size={20} sx={{ mr: 1 }} />
-                  <Typography variant="h6" color="text.secondary">
+                <Box sx={flexCenterVertical}>
+                  <CircularProgress size={20} sx={buttonWithMargin(1)} />
+                  <Typography variant="h6" sx={textSecondary}>
                     Loading...
                   </Typography>
                 </Box>
@@ -397,13 +410,13 @@ const FilesPage = () => {
       </Card>
 
       {filesError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={errorContainer}>
           {filesError.message}
         </Alert>
       )}
 
       {filesLoading ? (
-        <Box display="flex" justifyContent="center" p={4}>
+        <Box sx={loadingContainer}>
           <CircularProgress />
         </Box>
       ) : files.length > 0 ? (
@@ -428,7 +441,7 @@ const FilesPage = () => {
         fullWidth>
         <DialogTitle>Upload File</DialogTitle>
         <DialogContent>
-          <Box sx={{ mt: 2 }}>
+          <Box sx={marginTop(2)}>
             <input
               accept="*/*"
               style={{ display: "none" }}
@@ -445,7 +458,7 @@ const FilesPage = () => {
               </Button>
             </label>
             {selectedFile && (
-              <Typography variant="body2" sx={{ mt: 2 }}>
+              <Typography variant="body2" sx={marginTop(2)}>
                 Selected: {selectedFile.name} ({formatBytes(selectedFile.size)})
               </Typography>
             )}

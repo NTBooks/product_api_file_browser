@@ -169,11 +169,3 @@ export const getGroupStats = async (groupId) => {
     return response.data
 }
 
-// Proxy content from IPFS gateway to avoid CORS issues
-export const proxyContent = async (url) => {
-    const response = await axios.get(`${API_BASE_URL}/proxy-content`, {
-        params: { url },
-        responseType: 'text' // Ensure we get raw text, not parsed JSON
-    })
-    return response.data
-} 

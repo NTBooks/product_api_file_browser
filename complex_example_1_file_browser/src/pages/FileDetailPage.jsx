@@ -41,7 +41,33 @@ import {
 } from "../hooks/useApi";
 import LazyImage from "../components/LazyImage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getFileInfo, deleteFile, proxyContent } from "../services/api";
+import { getFileInfo, deleteFile } from "../services/api";
+import { toProxyUrl } from "../utils/ipfsUtils";
+import {
+  flexSpaceBetween,
+  flexCenterVertical,
+  flexGap,
+  flexGapWrap,
+  flexCenter,
+  iconWithMargin,
+  iconSecondary,
+  marginBottom,
+  marginTop,
+  loadingContainer,
+  errorContainer,
+  cardFullHeight,
+  textWithMargin,
+  textSecondary,
+  buttonWithMargin,
+  alertWithMargin,
+  fullWidth,
+  minHeight,
+  dividerWithMargin,
+  cardWithPadding,
+  contentLoadingBox,
+  contentErrorBox,
+  contentBox,
+} from "../utils/commonStyles";
 
 const FileDetailPage = () => {
   const { hash } = useParams();
@@ -256,7 +282,7 @@ const FileDetailPage = () => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" p={4}>
+      <Box sx={loadingContainer}>
         <CircularProgress />
       </Box>
     );
@@ -268,7 +294,7 @@ const FileDetailPage = () => {
         <Button
           startIcon={<ArrowBack />}
           onClick={() => navigate(-1)}
-          sx={{ mb: 2 }}>
+          sx={marginBottom(2)}>
           Back
         </Button>
         <Alert severity="error">{error.message}</Alert>
@@ -282,7 +308,7 @@ const FileDetailPage = () => {
         <Button
           startIcon={<ArrowBack />}
           onClick={() => navigate(-1)}
-          sx={{ mb: 2 }}>
+          sx={marginBottom(2)}>
           Back
         </Button>
         <Alert severity="info">File not found</Alert>
@@ -295,12 +321,12 @@ const FileDetailPage = () => {
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate(-1)}
-        sx={{ mb: 3 }}>
+        sx={marginBottom(3)}>
         Back
       </Button>
 
       {/* File Name Header */}
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+      <Typography variant="h4" gutterBottom sx={marginBottom(3)}>
         {fileInfo?.name || `File: ${hash}`}
       </Typography>
 
@@ -323,36 +349,17 @@ const FileDetailPage = () => {
               ) : isJsonFile(fileInfo.name) ? (
                 <Box>
                   {jsonLoading ? (
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="400"
-                      bgcolor="grey.100"
-                      borderRadius={1}>
+                    <Box sx={contentLoadingBox(400)}>
                       <CircularProgress />
                     </Box>
                   ) : jsonError ? (
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="400"
-                      bgcolor="grey.100"
-                      borderRadius={1}>
+                    <Box sx={contentErrorBox(400)}>
                       <Typography variant="h6" color="error">
                         Failed to load JSON content: {jsonError.message}
                       </Typography>
                     </Box>
                   ) : jsonContent ? (
-                    <Box
-                      sx={{
-                        maxHeight: "400px",
-                        overflow: "auto",
-                        border: "1px solid #e0e0e0",
-                        borderRadius: 1,
-                        bgcolor: "#f8f9fa",
-                      }}>
+                    <Box sx={contentBox}>
                       <SyntaxHighlighter
                         language="json"
                         style={tomorrow}
@@ -367,14 +374,8 @@ const FileDetailPage = () => {
                       </SyntaxHighlighter>
                     </Box>
                   ) : (
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="400"
-                      bgcolor="grey.100"
-                      borderRadius={1}>
-                      <Typography variant="h6" color="text.secondary">
+                    <Box sx={contentErrorBox(400)}>
+                      <Typography variant="h6" sx={textSecondary}>
                         No JSON content available
                       </Typography>
                     </Box>
@@ -386,37 +387,17 @@ const FileDetailPage = () => {
                     Text Content
                   </Typography>
                   {textLoading ? (
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="400"
-                      bgcolor="grey.100"
-                      borderRadius={1}>
+                    <Box sx={contentLoadingBox(400)}>
                       <CircularProgress />
                     </Box>
                   ) : textError ? (
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="400"
-                      bgcolor="grey.100"
-                      borderRadius={1}>
+                    <Box sx={contentErrorBox(400)}>
                       <Typography variant="h6" color="error">
                         Failed to load text content: {textError.message}
                       </Typography>
                     </Box>
                   ) : textContent ? (
-                    <Box
-                      sx={{
-                        maxHeight: "400px",
-                        overflow: "auto",
-                        border: "1px solid #e0e0e0",
-                        borderRadius: 1,
-                        bgcolor: "#f8f9fa",
-                        p: 2,
-                      }}>
+                    <Box sx={{ ...contentBox, p: 2 }}>
                       <Typography
                         component="pre"
                         sx={{
@@ -430,14 +411,8 @@ const FileDetailPage = () => {
                       </Typography>
                     </Box>
                   ) : (
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="400"
-                      bgcolor="grey.100"
-                      borderRadius={1}>
-                      <Typography variant="h6" color="text.secondary">
+                    <Box sx={contentErrorBox(400)}>
+                      <Typography variant="h6" sx={textSecondary}>
                         No text content available
                       </Typography>
                     </Box>
@@ -445,29 +420,20 @@ const FileDetailPage = () => {
                 </Box>
               ) : isPdfFile(fileInfo.name) ? (
                 <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  height="600px"
-                  bgcolor="grey.100"
-                  borderRadius={1}
-                  sx={{ minHeight: "600px" }}>
+                  sx={{
+                    ...contentLoadingBox(600),
+                    minHeight: "600px",
+                  }}>
                   <iframe
-                    src={getOriginalUrl(fileInfo.gatewayurl)}
+                    src={toProxyUrl(fileInfo.gatewayurl)}
                     width="100%"
                     height="100%"
                     style={{ border: "none", borderRadius: "4px" }}
                   />
                 </Box>
               ) : (
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  height="400"
-                  bgcolor="grey.100"
-                  borderRadius={1}>
-                  <Typography variant="h6" color="text.secondary">
+                <Box sx={contentErrorBox(400)}>
+                  <Typography variant="h6" sx={textSecondary}>
                     Preview not available
                   </Typography>
                 </Box>
@@ -484,7 +450,7 @@ const FileDetailPage = () => {
                 File Information
               </Typography>
 
-              <Box mb={2}>
+              <Box sx={marginBottom(2)}>
                 <Typography variant="h6" color="primary">
                   {fileInfo.name || "Unknown File"}
                 </Typography>
@@ -492,7 +458,7 @@ const FileDetailPage = () => {
 
               {/* Notice for unstamped files */}
               {isUnstampedFile && (
-                <Alert severity="info" sx={{ mb: 2 }}>
+                <Alert severity="info" sx={marginBottom(2)}>
                   This file is not stamped. Detailed verification information is
                   only available for stamped files.
                 </Alert>
@@ -500,15 +466,15 @@ const FileDetailPage = () => {
 
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Box display="flex" alignItems="center" mb={1}>
-                    <Storage sx={{ mr: 1, color: "text.secondary" }} />
+                  <Box sx={{ ...flexCenterVertical, ...marginBottom(1) }}>
+                    <Storage sx={iconSecondary(16, 1)} />
                     <Typography variant="body1">
                       <strong>Hash:</strong> {hash}
                     </Typography>
                     <Button
                       size="small"
                       onClick={() => copyToClipboard(hash)}
-                      sx={{ ml: 1 }}>
+                      sx={textWithMargin(1)}>
                       Copy
                     </Button>
                   </Box>
@@ -516,15 +482,15 @@ const FileDetailPage = () => {
 
                 {fileInfo.contract && (
                   <Grid item xs={12}>
-                    <Box display="flex" alignItems="center" mb={1}>
-                      <Link sx={{ mr: 1, color: "text.secondary" }} />
+                    <Box sx={{ ...flexCenterVertical, ...marginBottom(1) }}>
+                      <Link sx={iconSecondary(16, 1)} />
                       <Typography variant="body1">
                         <strong>Contract:</strong> {fileInfo.contract}
                       </Typography>
                       <Button
                         size="small"
                         onClick={() => copyToClipboard(fileInfo.contract)}
-                        sx={{ ml: 1 }}>
+                        sx={textWithMargin(1)}>
                         Copy
                       </Button>
                     </Box>
@@ -533,8 +499,8 @@ const FileDetailPage = () => {
 
                 {fileInfo.created && (
                   <Grid item xs={12}>
-                    <Box display="flex" alignItems="center" mb={1}>
-                      <CalendarToday sx={{ mr: 1, color: "text.secondary" }} />
+                    <Box sx={{ ...flexCenterVertical, ...marginBottom(1) }}>
+                      <CalendarToday sx={iconSecondary(16, 1)} />
                       <Typography variant="body1">
                         <strong>Created:</strong> {formatDate(fileInfo.created)}
                       </Typography>
@@ -543,7 +509,7 @@ const FileDetailPage = () => {
                 )}
 
                 <Grid item xs={12}>
-                  <Box display="flex" gap={1} flexWrap="wrap">
+                  <Box sx={flexGapWrap(1)}>
                     <Chip
                       label={fileInfo.network || "Unknown"}
                       color={getNetworkColor(fileInfo.network)}
@@ -557,10 +523,10 @@ const FileDetailPage = () => {
                 </Grid>
               </Grid>
 
-              <Divider sx={{ my: 3 }} />
+              <Divider sx={dividerWithMargin(3)} />
 
               {/* Action Buttons */}
-              <Box display="flex" gap={2} flexWrap="wrap">
+              <Box sx={flexGapWrap(2)}>
                 <Button
                   variant="outlined"
                   startIcon={<Download />}

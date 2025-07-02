@@ -61,37 +61,3 @@ export const extractIpfsHash = (gatewayUrl) => {
     return null;
 };
 
-/**
- * Creates a proxy URL for IPFS content
- * @param {string} ipfsHash - The IPFS hash
- * @returns {string} - The proxy URL
- */
-export const createIpfsProxyUrl = (ipfsHash) => {
-    if (!ipfsHash) return null;
-    return `/api/ipfs/${ipfsHash}`;
-};
-
-/**
- * Gets the best IPFS URL, falling back to proxy if needed
- * @param {string} gatewayUrl - The original gateway URL
- * @param {boolean} useProxy - Whether to use proxy as fallback
- * @returns {string} - The best URL to use
- */
-export const getBestIpfsUrl = (gatewayUrl, useProxy = true) => {
-    if (!gatewayUrl) return null;
-
-    // If it's already a proxy URL, return as is
-    if (gatewayUrl.startsWith('/api/ipfs/')) {
-        return gatewayUrl;
-    }
-
-    // Try to extract IPFS hash and create proxy URL
-    if (useProxy) {
-        const ipfsHash = extractIpfsHash(gatewayUrl);
-        if (ipfsHash) {
-            return createIpfsProxyUrl(ipfsHash);
-        }
-    }
-
-    return gatewayUrl;
-}; 

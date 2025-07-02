@@ -7,8 +7,8 @@ import {
     uploadFile,
     deleteFile,
     stampCollection,
-    proxyContent,
 } from "../services/api";
+import { toProxyUrl } from "../utils/ipfsUtils";
 
 // Query keys for consistent caching
 export const queryKeys = {
@@ -132,12 +132,20 @@ export const useJsonContent = (fileInfo) => {
                 throw new Error('No gateway URL provided');
             }
 
-            console.log('Fetching JSON content via React Query:', fileInfo.gatewayurl);
-            const response = await proxyContent(fileInfo.gatewayurl);
-            console.log('JSON response received, length:', response.length);
+            // Use proxy URL to avoid CORS issues
+            const proxyUrl = toProxyUrl(fileInfo.gatewayurl);
+            console.log('Fetching JSON content via proxy:', proxyUrl);
+            const response = await fetch(proxyUrl);
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch JSON: ${response.status} ${response.statusText}`);
+            }
+
+            const text = await response.text();
+            console.log('JSON response received, length:', text.length);
 
             // Parse the JSON and return it
-            const parsed = JSON.parse(response);
+            const parsed = JSON.parse(text);
             console.log('JSON parsed successfully');
             return parsed;
         },
@@ -158,11 +166,19 @@ export const useTextContent = (fileInfo) => {
                 throw new Error('No gateway URL provided');
             }
 
-            console.log('Fetching text content via React Query:', fileInfo.gatewayurl);
-            const response = await proxyContent(fileInfo.gatewayurl);
-            console.log('Text response received, length:', response.length);
+            // Use proxy URL to avoid CORS issues
+            const proxyUrl = toProxyUrl(fileInfo.gatewayurl);
+            console.log('Fetching text content via proxy:', proxyUrl);
+            const response = await fetch(proxyUrl);
 
-            return response;
+            if (!response.ok) {
+                throw new Error(`Failed to fetch text: ${response.status} ${response.statusText}`);
+            }
+
+            const text = await response.text();
+            console.log('Text response received, length:', text.length);
+
+            return text;
         },
         enabled: !!fileInfo?.gatewayurl && isTextFile(fileInfo.name),
         staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
