@@ -37,6 +37,8 @@ import {
 import LazyImage from "../components/LazyImage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getFileInfo, deleteFile } from "../services/api";
+import { useEvents } from "../contexts/EventContext";
+import { usePendingUpload } from "../hooks/usePendingUpload";
 
 import {
   flexSpaceBetween,
@@ -124,6 +126,11 @@ const FileDetailPage = () => {
 
   // Use React Query mutation for delete
   const deleteMutation = useDeleteFile();
+
+  // Check pending upload status
+  const { isPendingUpload } = useEvents();
+  const { isConfirmed, isConnected } = usePendingUpload(hash);
+  const isPending = isPendingUpload(hash);
 
   const formatBytes = (bytes) => {
     if (bytes === 0) return "0 Bytes";
@@ -324,6 +331,23 @@ const FileDetailPage = () => {
       <Typography variant="h4" gutterBottom sx={marginBottom(3)}>
         {fileInfo?.name || `File: ${hash}`}
       </Typography>
+
+      {/* Pending Upload Warning */}
+      {isPending && !isConfirmed && (
+        <Alert
+          severity="warning"
+          sx={marginBottom(3)}
+          action={
+            <Button color="inherit" size="small">
+              {isConnected
+                ? "Waiting for IPFS confirmation..."
+                : "Connection lost"}
+            </Button>
+          }>
+          This file is still being uploaded to IPFS. Downloads may not work
+          until the upload is confirmed.
+        </Alert>
+      )}
 
       <Grid container spacing={3}>
         {/* File Preview */}
@@ -534,10 +558,13 @@ const FileDetailPage = () => {
                 <Button
                   variant="outlined"
                   startIcon={<DownloadIcon />}
+                  disabled={isPending && !isConfirmed}
                   onClick={() =>
                     window.open(`https://ipfs.io/ipfs/${hash}`, "_blank")
                   }>
-                  Download
+                  {isPending && !isConfirmed
+                    ? "Download (Pending)"
+                    : "Download"}
                 </Button>
 
                 {!fileInfo.foreign_tx_id && (

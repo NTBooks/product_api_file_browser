@@ -331,39 +331,6 @@ const DashboardPage = () => {
           </Grid>
 
           <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  System Status
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="body1">
-                      <strong>Group Enabled:</strong>{" "}
-                      {stats.groupEnabled ? "Yes" : "No"}
-                    </Typography>
-                    <Typography variant="body1">
-                      <strong>Group Exists:</strong>{" "}
-                      {stats.groupExists || "N/A"}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="body1">
-                      <strong>Group Public:</strong>{" "}
-                      {stats.groupPublic || "N/A"}
-                    </Typography>
-                    <Typography variant="body1">
-                      <strong>Network:</strong>{" "}
-                      {credentialsInfo?.network || "N/A"}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12}>
             <Button
               variant="contained"
               size="large"

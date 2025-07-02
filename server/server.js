@@ -521,6 +521,69 @@ app.get('/ipfs', async (req, res) => {
     }
 });
 
+// Webhook events stream endpoint (proxied)
+app.get('/api/webhook/events/stream', requireCredentials, async (req, res) => {
+    try {
+        const { apikey, secretKey, network } = getCredentialsFromSession(req);
+
+        // Set SSE headers
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Cache-Control'
+        });
+
+        // Send initial connection message
+        res.write(`data: ${JSON.stringify({
+            id: `connection-${Date.now()}`,
+            type: 'connection.established',
+            tenant: apikey,
+            timestamp: new Date().toISOString(),
+            data: {
+                message: 'SSE connection established',
+                event_types: ['file.uploaded', 'file.deleted', 'collection.stamped']
+            }
+        })}\n\n`);
+
+        // Keep connection alive with periodic heartbeat
+        const heartbeat = setInterval(() => {
+            if (res.writableEnded) {
+                clearInterval(heartbeat);
+                return;
+            }
+
+            try {
+                res.write(`: heartbeat ${Date.now()}\n\n`);
+            } catch (error) {
+                console.error('Error sending heartbeat:', error);
+                clearInterval(heartbeat);
+            }
+        }, 30000); // Send heartbeat every 30 seconds
+
+        // Handle client disconnect
+        req.on('close', () => {
+            console.log(`SSE connection closed for tenant: ${apikey}`);
+            clearInterval(heartbeat);
+        });
+
+        req.on('error', (error) => {
+            console.error(`SSE connection error for tenant ${apikey}:`, error);
+            clearInterval(heartbeat);
+        });
+
+    } catch (error) {
+        console.error('SSE stream error:', error);
+        if (!res.headersSent) {
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error'
+            });
+        }
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     if (hasHardcodedCredentials()) {

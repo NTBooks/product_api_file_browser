@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -35,6 +35,8 @@ import {
   useGroups,
 } from "../hooks/useApi";
 import LazyImage from "../components/LazyImage";
+import { useEvents } from "../contexts/EventContext";
+import { usePendingUpload } from "../hooks/usePendingUpload";
 import {
   flexSpaceBetween,
   flexCenterVertical,
@@ -65,6 +67,7 @@ const FilesPage = () => {
     message: "",
     severity: "success",
   });
+  const { addPendingUpload, isPendingUpload } = useEvents();
 
   // Use React Query hooks
   const {
@@ -204,12 +207,22 @@ const FilesPage = () => {
     uploadMutation.mutate(
       { file: selectedFile, groupId, network },
       {
-        onSuccess: () => {
-          setSnackbar({
-            open: true,
-            message: "File uploaded successfully!",
-            severity: "success",
-          });
+        onSuccess: (response) => {
+          // If the upload response includes a hash, add it to pending uploads
+          if (response && response.hash) {
+            addPendingUpload(response.hash);
+            setSnackbar({
+              open: true,
+              message: "File uploaded! Waiting for IPFS confirmation...",
+              severity: "info",
+            });
+          } else {
+            setSnackbar({
+              open: true,
+              message: "File uploaded successfully!",
+              severity: "success",
+            });
+          }
           setUploadDialogOpen(false);
           setSelectedFile(null);
         },
@@ -255,23 +268,28 @@ const FilesPage = () => {
   const FileCard = ({ file }) => {
     // Use is_stamped directly from the API
     const isStamped = file.is_stamped || false;
+    const isPending = isPendingUpload(file.hash);
+    const { isConfirmed, isConnected } = usePendingUpload(file.hash);
 
     return (
       <Card
         sx={{
           ...cardFullHeight,
-          cursor: "pointer",
+          cursor: isPending && !isConfirmed ? "not-allowed" : "pointer",
           transition: "transform 0.2s, box-shadow 0.2s",
+          opacity: isPending && !isConfirmed ? 0.7 : 1,
           "&:hover": {
-            transform: "translateY(-4px)",
-            boxShadow: 4,
+            transform: isPending && !isConfirmed ? "none" : "translateY(-4px)",
+            boxShadow: isPending && !isConfirmed ? 1 : 4,
           },
         }}
-        onClick={() =>
-          navigate(`/file/${file.hash}`, {
-            state: { fileData: file, groupId: groupId },
-          })
-        }>
+        onClick={() => {
+          if (!isPending || isConfirmed) {
+            navigate(`/file/${file.hash}`, {
+              state: { fileData: file, groupId: groupId },
+            });
+          }
+        }}>
         {isImageFile(file.name) && (
           <LazyImage
             src={
@@ -318,12 +336,23 @@ const FilesPage = () => {
               color={getNetworkColor(file.network)}
               size="small"
             />
-            <Chip
-              label={isStamped ? "Stamped" : "Not Stamped"}
-              color={isStamped ? "success" : "warning"}
-              icon={isStamped ? <CheckCircleIcon /> : <CancelIcon />}
-              size="small"
-            />
+            {isPending && !isConfirmed ? (
+              <Chip
+                label={isConnected ? "Pending IPFS" : "Waiting for connection"}
+                color="warning"
+                icon={
+                  isConnected ? <CircularProgress size={16} /> : <WarningIcon />
+                }
+                size="small"
+              />
+            ) : (
+              <Chip
+                label={isStamped ? "Stamped" : "Not Stamped"}
+                color={isStamped ? "success" : "warning"}
+                icon={isStamped ? <CheckCircleIcon /> : <CancelIcon />}
+                size="small"
+              />
+            )}
             {file.bulk_check?.postmark_hash && (
               <Chip
                 label={`Stamp: ${formatBulkId(file.bulk_check.postmark_hash)}`}
