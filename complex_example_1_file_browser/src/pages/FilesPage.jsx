@@ -1,38 +1,32 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Box,
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Grid,
-  CircularProgress,
-  Alert,
-  Button,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  IconButton,
-  Snackbar,
-} from "@mui/material";
-import {
-  InsertDriveFile,
-  Image,
-  PictureAsPdf,
-  Description,
-  Upload,
-  Refresh,
-  CheckCircle,
-  Cancel,
-  Verified,
-  ArrowBack,
-  Code,
-  Warning,
-} from "@mui/icons-material";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
+import IconButton from "@mui/material/IconButton";
+import Snackbar from "@mui/material/Snackbar";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import ImageIcon from "@mui/icons-material/Image";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import CodeIcon from "@mui/icons-material/Code";
+import UploadIcon from "@mui/icons-material/Upload";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import VerifiedIcon from "@mui/icons-material/Verified";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import WarningIcon from "@mui/icons-material/Warning";
 import {
   useFiles,
   useGroupStats,
@@ -136,13 +130,13 @@ const FilesPage = () => {
     const extension = fileName.split(".").pop()?.toLowerCase();
 
     if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(extension)) {
-      return <Image color="primary" />;
+      return <ImageIcon color="primary" />;
     } else if (["pdf"].includes(extension)) {
-      return <PictureAsPdf color="error" />;
+      return <PictureAsPdfIcon color="error" />;
     } else if (["json"].includes(extension)) {
-      return <Code color="warning" />;
+      return <CodeIcon color="warning" />;
     } else {
-      return <InsertDriveFile color="action" />;
+      return <InsertDriveFileIcon color="action" />;
     }
   };
 
@@ -296,7 +290,7 @@ const FilesPage = () => {
             <Chip
               label={isStamped ? "Stamped" : "Not Stamped"}
               color={isStamped ? "success" : "warning"}
-              icon={isStamped ? <CheckCircle /> : <Cancel />}
+              icon={isStamped ? <CheckCircleIcon /> : <CancelIcon />}
               size="small"
             />
             {file.bulk_check?.postmark_hash && (
@@ -319,7 +313,7 @@ const FilesPage = () => {
         <Box sx={flexGap(2)}>
           <Button
             variant="outlined"
-            startIcon={<ArrowBack />}
+            startIcon={<ArrowBackIcon />}
             onClick={() => navigate("/groups")}>
             Back to Groups
           </Button>
@@ -328,21 +322,21 @@ const FilesPage = () => {
         <Box sx={flexGap(2)}>
           <Button
             variant="outlined"
-            startIcon={<Refresh />}
+            startIcon={<RefreshIcon />}
             onClick={refetchFiles}
             disabled={filesLoading}>
             Refresh
           </Button>
           <Button
             variant="contained"
-            startIcon={<Upload />}
+            startIcon={<UploadIcon />}
             onClick={() => setUploadDialogOpen(true)}>
             Upload File
           </Button>
           <Button
             variant="contained"
             color="secondary"
-            startIcon={<Verified />}
+            startIcon={<VerifiedIcon />}
             onClick={handleStampCollection}
             disabled={groupStats?.allStamped || stampMutation.isPending}>
             {stampMutation.isPending ? "Stamping..." : "Stamp Collection"}
@@ -362,16 +356,18 @@ const FilesPage = () => {
               {groupStats ? (
                 <>
                   <Box sx={flexCenterVertical}>
-                    <InsertDriveFile sx={iconSecondary(20, 1)} />
+                    <InsertDriveFileIcon sx={iconSecondary(20, 1)} />
                     <Typography variant="h6" sx={textSecondary}>
                       {groupStats.totalFiles} files
                     </Typography>
                   </Box>
                   <Box sx={flexCenterVertical}>
                     {groupStats.allStamped ? (
-                      <CheckCircle sx={iconWithMargin(20, 1, "success.main")} />
+                      <CheckCircleIcon
+                        sx={iconWithMargin(20, 1, "success.main")}
+                      />
                     ) : (
-                      <Warning sx={iconWithMargin(20, 1, "warning.main")} />
+                      <WarningIcon sx={iconWithMargin(20, 1, "warning.main")} />
                     )}
                     <Typography
                       variant="h6"
@@ -401,7 +397,7 @@ const FilesPage = () => {
               <Chip
                 label="All Files Stamped"
                 color="success"
-                icon={<CheckCircle />}
+                icon={<CheckCircleIcon />}
                 size="medium"
               />
             )}
@@ -453,7 +449,7 @@ const FilesPage = () => {
               <Button
                 variant="outlined"
                 component="span"
-                startIcon={<Upload />}>
+                startIcon={<UploadIcon />}>
                 Select File
               </Button>
             </label>

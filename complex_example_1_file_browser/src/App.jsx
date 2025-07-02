@@ -1,15 +1,14 @@
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  Container,
-} from "@mui/material";
-import { Folder, Dashboard } from "@mui/icons-material";
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+import FolderIcon from "@mui/icons-material/Folder";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 import DashboardPage from "./pages/DashboardPage";
 import GroupsPage from "./pages/GroupsPage";
 import FilesPage from "./pages/FilesPage";
@@ -60,7 +59,7 @@ function App() {
             </Typography>
             <Button
               color="inherit"
-              startIcon={<Dashboard />}
+              startIcon={<DashboardIcon />}
               onClick={() => navigate("/")}
               sx={{
                 backgroundColor: isActive("/")
@@ -72,7 +71,7 @@ function App() {
             </Button>
             <Button
               color="inherit"
-              startIcon={<Folder />}
+              startIcon={<FolderIcon />}
               onClick={() => navigate("/groups")}
               sx={{
                 backgroundColor: isActive("/groups")

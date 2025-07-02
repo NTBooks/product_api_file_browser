@@ -1,28 +1,24 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  TextField,
-  Button,
-  Alert,
-  CircularProgress,
-  Paper,
-  Divider,
-  Chip,
-} from "@mui/material";
-import {
-  Storage,
-  Folder,
-  CheckCircle,
-  Warning,
-  Settings,
-  Security,
-  VpnKey,
-} from "@mui/icons-material";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Alert from "@mui/material/Alert";
+import CircularProgress from "@mui/material/CircularProgress";
+import Paper from "@mui/material/Paper";
+import Divider from "@mui/material/Divider";
+import Chip from "@mui/material/Chip";
+import StorageIcon from "@mui/icons-material/Storage";
+import FolderIcon from "@mui/icons-material/Folder";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningIcon from "@mui/icons-material/Warning";
+import SettingsIcon from "@mui/icons-material/Settings";
+import SecurityIcon from "@mui/icons-material/Security";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import {
   getStats,
   saveCredentials,
@@ -183,7 +179,7 @@ const DashboardPage = () => {
       {showCredentials && (
         <Paper sx={{ p: 3, mb: 3 }}>
           <Box display="flex" alignItems="center" mb={2}>
-            <Settings sx={{ mr: 1 }} />
+            <SettingsIcon sx={{ mr: 1 }} />
             <Typography variant="h6">API Configuration</Typography>
           </Box>
           <Grid container spacing={2}>
@@ -256,14 +252,14 @@ const DashboardPage = () => {
               <Box display="flex" alignItems="center" mt={1}>
                 {credentialsInfo.source === "environment" ? (
                   <Chip
-                    icon={<VpnKey />}
+                    icon={<VpnKeyIcon />}
                     label="Environment Variables"
                     color="success"
                     size="small"
                   />
                 ) : (
                   <Chip
-                    icon={<Security />}
+                    icon={<SecurityIcon />}
                     label="Session Storage"
                     color="primary"
                     size="small"
@@ -276,7 +272,7 @@ const DashboardPage = () => {
                 <>
                   <Button
                     variant="outlined"
-                    startIcon={<Settings />}
+                    startIcon={<SettingsIcon />}
                     onClick={() => setShowCredentials(true)}>
                     Edit Configuration
                   </Button>
@@ -314,14 +310,14 @@ const DashboardPage = () => {
             <StatCard
               title="Total Files"
               value={stats.totalFiles}
-              icon={<Storage color="primary" />}
+              icon={<StorageIcon color="primary" />}
             />
           </Grid>
           <Grid item xs={12} md={4}>
             <StatCard
               title="Total Size"
               value={formatBytes(stats.totalSize)}
-              icon={<Folder color="info" />}
+              icon={<FolderIcon color="info" />}
               color="info"
             />
           </Grid>
@@ -329,7 +325,7 @@ const DashboardPage = () => {
             <StatCard
               title="Credits"
               value={stats.credits}
-              icon={<Warning color="warning" />}
+              icon={<WarningIcon color="warning" />}
               color="warning"
             />
           </Grid>

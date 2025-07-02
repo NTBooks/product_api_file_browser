@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import {
-  Box,
-  Skeleton,
-  Alert,
-  Typography,
-  CircularProgress,
-} from "@mui/material";
-import { Image, BrokenImage } from "@mui/icons-material";
+import Box from "@mui/material/Box";
+import Skeleton from "@mui/material/Skeleton";
+import Alert from "@mui/material/Alert";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+import ImageIcon from "@mui/icons-material/Image";
+import BrokenImageIcon from "@mui/icons-material/BrokenImage";
 import { useInView } from "react-intersection-observer";
 import {
   flexCenter,
@@ -123,7 +122,7 @@ const LazyImage = ({
   const compactPlaceholder = (
     <Box
       sx={createPlaceholderStyles(placeholderWidth, placeholderHeight, true)}>
-      <Image sx={createIconStyles(true)} />
+      <ImageIcon sx={createIconStyles(true)} />
       <Typography sx={createTextStyles(true)}>Loading...</Typography>
     </Box>
   );
@@ -132,7 +131,7 @@ const LazyImage = ({
   const defaultPlaceholder = (
     <Box
       sx={createPlaceholderStyles(placeholderWidth, placeholderHeight, false)}>
-      <Image sx={createIconStyles(false)} />
+      <ImageIcon sx={createIconStyles(false)} />
       <Typography sx={createTextStyles(false)}>Loading Image...</Typography>
       <CircularProgress
         size={20}
@@ -147,7 +146,7 @@ const LazyImage = ({
   // Compact error component
   const compactErrorComponent = (
     <Box sx={createErrorStyles(placeholderWidth, placeholderHeight, true)}>
-      <BrokenImage sx={createErrorIconStyles(true)} />
+      <BrokenImageIcon sx={createErrorIconStyles(true)} />
       <Typography sx={createErrorTextStyles(true)}>Failed to load</Typography>
     </Box>
   );
@@ -155,7 +154,7 @@ const LazyImage = ({
   // Default error component with broken image icon
   const defaultErrorComponent = (
     <Box sx={createErrorStyles(placeholderWidth, placeholderHeight, false)}>
-      <BrokenImage sx={createErrorIconStyles(false)} />
+      <BrokenImageIcon sx={createErrorIconStyles(false)} />
       <Typography sx={createErrorTextStyles(false)}>
         Failed to load image
       </Typography>

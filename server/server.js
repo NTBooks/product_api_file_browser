@@ -460,8 +460,6 @@ app.get('/api/group-stats/:groupId', requireCredentials, async (req, res) => {
     }
 });
 
-
-
 // GET /ipfs - Proxy IPFS content to handle CORS and ORB issues
 app.get('/ipfs', async (req, res) => {
     try {

@@ -1,36 +1,31 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import {
-  Box,
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Grid,
-  CircularProgress,
-  Alert,
-  Button,
-  Chip,
-  Paper,
-  Divider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Snackbar,
-  TextField,
-} from "@mui/material";
-import {
-  ArrowBack,
-  Delete,
-  CheckCircle,
-  Cancel,
-  Storage,
-  CalendarToday,
-  Link,
-  Download,
-  Code,
-} from "@mui/icons-material";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Paper from "@mui/material/Paper";
+import Divider from "@mui/material/Divider";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Snackbar from "@mui/material/Snackbar";
+import TextField from "@mui/material/TextField";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import StorageIcon from "@mui/icons-material/Storage";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import LinkIcon from "@mui/icons-material/Link";
+import DownloadIcon from "@mui/icons-material/Download";
+import CodeIcon from "@mui/icons-material/Code";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/prism";
 import {
@@ -292,7 +287,7 @@ const FileDetailPage = () => {
     return (
       <Box>
         <Button
-          startIcon={<ArrowBack />}
+          startIcon={<ArrowBackIcon />}
           onClick={() => navigate(-1)}
           sx={marginBottom(2)}>
           Back
@@ -306,7 +301,7 @@ const FileDetailPage = () => {
     return (
       <Box>
         <Button
-          startIcon={<ArrowBack />}
+          startIcon={<ArrowBackIcon />}
           onClick={() => navigate(-1)}
           sx={marginBottom(2)}>
           Back
@@ -319,7 +314,7 @@ const FileDetailPage = () => {
   return (
     <Box>
       <Button
-        startIcon={<ArrowBack />}
+        startIcon={<ArrowBackIcon />}
         onClick={() => navigate(-1)}
         sx={marginBottom(3)}>
         Back
@@ -467,7 +462,7 @@ const FileDetailPage = () => {
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <Box sx={{ ...flexCenterVertical, ...marginBottom(1) }}>
-                    <Storage sx={iconSecondary(16, 1)} />
+                    <StorageIcon sx={iconSecondary(16, 1)} />
                     <Typography variant="body1">
                       <strong>Hash:</strong> {hash}
                     </Typography>
@@ -483,7 +478,7 @@ const FileDetailPage = () => {
                 {fileInfo.contract && (
                   <Grid item xs={12}>
                     <Box sx={{ ...flexCenterVertical, ...marginBottom(1) }}>
-                      <Link sx={iconSecondary(16, 1)} />
+                      <LinkIcon sx={iconSecondary(16, 1)} />
                       <Typography variant="body1">
                         <strong>Contract:</strong> {fileInfo.contract}
                       </Typography>
@@ -500,7 +495,7 @@ const FileDetailPage = () => {
                 {fileInfo.created && (
                   <Grid item xs={12}>
                     <Box sx={{ ...flexCenterVertical, ...marginBottom(1) }}>
-                      <CalendarToday sx={iconSecondary(16, 1)} />
+                      <CalendarTodayIcon sx={iconSecondary(16, 1)} />
                       <Typography variant="body1">
                         <strong>Created:</strong> {formatDate(fileInfo.created)}
                       </Typography>
@@ -517,7 +512,13 @@ const FileDetailPage = () => {
                     <Chip
                       label={fileInfo.is_stamped ? "Stamped" : "Not Stamped"}
                       color={fileInfo.is_stamped ? "success" : "warning"}
-                      icon={fileInfo.is_stamped ? <CheckCircle /> : <Cancel />}
+                      icon={
+                        fileInfo.is_stamped ? (
+                          <CheckCircleIcon />
+                        ) : (
+                          <CancelIcon />
+                        )
+                      }
                     />
                   </Box>
                 </Grid>
@@ -529,7 +530,7 @@ const FileDetailPage = () => {
               <Box sx={flexGapWrap(2)}>
                 <Button
                   variant="outlined"
-                  startIcon={<Download />}
+                  startIcon={<DownloadIcon />}
                   onClick={() =>
                     window.open(`https://ipfs.io/ipfs/${hash}`, "_blank")
                   }>
@@ -540,7 +541,7 @@ const FileDetailPage = () => {
                   <Button
                     variant="contained"
                     color="error"
-                    startIcon={<Delete />}
+                    startIcon={<DeleteIcon />}
                     onClick={() => setDeleteDialogOpen(true)}>
                     Delete File
                   </Button>

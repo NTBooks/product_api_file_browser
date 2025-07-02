@@ -1,36 +1,32 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  CircularProgress,
-  Alert,
-  Button,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Snackbar,
-} from "@mui/material";
-import {
-  Folder,
-  Refresh,
-  CalendarToday,
-  Person,
-  Add,
-  InsertDriveFile,
-  CheckCircle,
-  Warning,
-} from "@mui/icons-material";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import Snackbar from "@mui/material/Snackbar";
+import FolderIcon from "@mui/icons-material/Folder";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import PersonIcon from "@mui/icons-material/Person";
+import AddIcon from "@mui/icons-material/Add";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningIcon from "@mui/icons-material/Warning";
 import { useGroups } from "../hooks/useApi";
 import { createGroup } from "../services/api";
 import {
@@ -115,7 +111,7 @@ const GroupsPage = () => {
         onClick={() => navigate(`/files/${group.id}`)}>
         <CardContent>
           <Box sx={{ ...flexCenterVertical, ...marginBottom(2) }}>
-            <Folder color="primary" sx={iconWithMargin(40, 2)} />
+            <FolderIcon color="primary" sx={iconWithMargin(40, 2)} />
             <Box flex={1}>
               <Typography variant="h6" component="div" noWrap>
                 {group.name}
@@ -127,14 +123,14 @@ const GroupsPage = () => {
           </Box>
 
           <Box sx={{ ...flexCenterVertical, ...marginBottom(1) }}>
-            <Person sx={iconSecondary(16, 1)} />
+            <PersonIcon sx={iconSecondary(16, 1)} />
             <Typography variant="body2" sx={textSecondary}>
               {group.user_id}
             </Typography>
           </Box>
 
           <Box sx={{ ...flexCenterVertical, ...marginBottom(2) }}>
-            <CalendarToday sx={iconSecondary(16, 1)} />
+            <CalendarTodayIcon sx={iconSecondary(16, 1)} />
             <Typography variant="body2" sx={textSecondary}>
               Created: {formatDate(group.createdAt)}
             </Typography>
@@ -159,14 +155,14 @@ const GroupsPage = () => {
         <Box sx={flexGap(2)}>
           <Button
             variant="outlined"
-            startIcon={<Refresh />}
+            startIcon={<RefreshIcon />}
             onClick={() => refetch()}
             disabled={isLoading}>
             Refresh
           </Button>
           <Button
             variant="contained"
-            startIcon={<Add />}
+            startIcon={<AddIcon />}
             onClick={() => setCreateDialogOpen(true)}>
             Create Group
           </Button>
