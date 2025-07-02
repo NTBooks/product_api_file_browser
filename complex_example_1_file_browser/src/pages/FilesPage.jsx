@@ -32,6 +32,7 @@ import {
   useGroupStats,
   useUploadFile,
   useStampCollection,
+  useGroups,
 } from "../hooks/useApi";
 import LazyImage from "../components/LazyImage";
 import {
@@ -79,6 +80,8 @@ const FilesPage = () => {
     isLoading: statsLoading,
     error: statsError,
   } = useGroupStats(groupId);
+
+  const { data: groupsData, isLoading: groupsLoading } = useGroups();
 
   const uploadMutation = useUploadFile();
   const stampMutation = useStampCollection();
@@ -183,8 +186,24 @@ const FilesPage = () => {
   const handleUpload = async () => {
     if (!selectedFile) return;
 
+    // Get the network from the groups data or from existing files
+    let network = "public"; // default fallback
+
+    if (files.length > 0) {
+      // If there are existing files, use their network
+      network = files[0].network;
+    } else if (groupsData?.groups) {
+      // If no files yet, get network from groups data
+      const group = groupsData.groups.find((g) => g.id === groupId);
+      if (group) {
+        network = group.network;
+      }
+    }
+
+    console.log(`Uploading file to group ${groupId} on network: ${network}`);
+
     uploadMutation.mutate(
-      { file: selectedFile, groupId },
+      { file: selectedFile, groupId, network },
       {
         onSuccess: () => {
           setSnackbar({
@@ -207,22 +226,31 @@ const FilesPage = () => {
   };
 
   const handleStampCollection = () => {
-    stampMutation.mutate(groupId, {
-      onSuccess: () => {
-        setSnackbar({
-          open: true,
-          message: "Collection stamped successfully!",
-          severity: "success",
-        });
-      },
-      onError: (error) => {
-        setSnackbar({
-          open: true,
-          message: error.message || "Stamping failed",
-          severity: "error",
-        });
-      },
-    });
+    // Get the network from the first file in the group
+    // All files in a group should have the same network
+    const network = files.length > 0 ? files[0].network : "public";
+
+    console.log(`Stamping collection ${groupId} on network: ${network}`);
+
+    stampMutation.mutate(
+      { groupId, network },
+      {
+        onSuccess: () => {
+          setSnackbar({
+            open: true,
+            message: "Collection stamped successfully!",
+            severity: "success",
+          });
+        },
+        onError: (error) => {
+          setSnackbar({
+            open: true,
+            message: error.message || "Stamping failed",
+            severity: "error",
+          });
+        },
+      }
+    );
   };
 
   const FileCard = ({ file }) => {

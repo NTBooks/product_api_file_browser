@@ -62,7 +62,7 @@ export const useUploadFile = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ file, groupId }) => uploadFile(file, groupId),
+        mutationFn: ({ file, groupId, network }) => uploadFile(file, groupId, network),
         onSuccess: (data, variables) => {
             // Invalidate and refetch files for the specific group
             queryClient.invalidateQueries({
@@ -106,8 +106,8 @@ export const useStampCollection = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (groupId) => stampCollection(groupId),
-        onSuccess: (data, groupId) => {
+        mutationFn: ({ groupId, network }) => stampCollection(groupId, network),
+        onSuccess: (data, { groupId }) => {
             // Invalidate and refetch files for the specific group
             queryClient.invalidateQueries({
                 queryKey: queryKeys.files(groupId),

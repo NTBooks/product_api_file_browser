@@ -118,12 +118,13 @@ export const getFileInfo = async (hash) => {
 }
 
 // Upload a file
-export const uploadFile = async (file, groupId) => {
+export const uploadFile = async (file, groupId, network) => {
     console.log('Uploading file:', file);
     console.log('File type:', typeof file);
     console.log('File constructor:', file.constructor.name);
     console.log('Is File object:', file instanceof File);
     console.log('Group ID:', groupId);
+    console.log('Network:', network);
 
     // Validate that file is a proper File object
     if (!file || !(file instanceof File)) {
@@ -133,6 +134,7 @@ export const uploadFile = async (file, groupId) => {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('groupId', groupId)
+    formData.append('network', network)
 
     console.log('FormData created successfully');
 
@@ -155,9 +157,10 @@ export const deleteFile = async (fileHash, groupId) => {
 }
 
 // Stamp collection
-export const stampCollection = async (groupId) => {
+export const stampCollection = async (groupId, network) => {
     const response = await axios.patch(`${API_BASE_URL}/stamp`, {
-        groupId
+        groupId,
+        network
     })
 
     return response.data

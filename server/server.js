@@ -403,16 +403,22 @@ app.delete('/api/file', requireCredentials, async (req, res) => {
 app.patch('/api/stamp', requireCredentials, async (req, res) => {
     try {
         const { apikey, secretKey, network } = getCredentialsFromSession(req);
-        const { groupId } = req.body;
+        const { groupId, network: requestNetwork } = req.body;
 
         if (!groupId) {
             return res.status(400).json({ success: false, message: 'Group ID is required' });
         }
 
+        // Use the network from the request if provided, otherwise fall back to session network
+        // This ensures we stamp on the correct network where the group was created
+        const targetNetwork = requestNetwork || network;
+
+        console.log(`Stamping collection ${groupId} on network: ${targetNetwork} (request: ${requestNetwork}, session: ${network})`);
+
         const result = await makeApiRequest('PATCH', `/webhook/${apikey}`, {
             'secret-key': secretKey,
             'group-id': groupId,
-            'network': network
+            'network': targetNetwork
         });
 
         if (result.success) {
