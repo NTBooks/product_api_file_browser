@@ -103,7 +103,7 @@ SESSION_SECRET=your-super-secret-session-key-change-in-production
 # Uncomment and set these if you want to hardcode credentials
 # API_KEY=your-api-key-here
 # API_SECRET=your-api-secret-here
-# API_NETWORK=public
+# Note: API_NETWORK removed - client now controls network explicitly
 
 # Server configuration
 PORT=3001
@@ -116,8 +116,8 @@ Set environment variables for hardcoded credentials:
 ```env
 API_KEY=your-production-api-key
 API_SECRET=your-production-api-secret
-API_NETWORK=public
 SESSION_SECRET=your-production-session-secret
+# Note: API_NETWORK removed - client now controls network explicitly
 ```
 
 When hardcoded credentials are set:
@@ -161,7 +161,7 @@ npm run server
 
    - API Key: Your webhook API key
    - Secret Key: Your webhook secret key
-   - Network: Choose between public, private, or all
+   - Network: Choose between public or private (client controls network for each operation)
 
 3. **Save the configuration** to start using the application
 

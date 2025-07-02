@@ -17,7 +17,6 @@ import {
   minHeight,
   fullWidth,
 } from "../utils/commonStyles";
-import { toProxyUrl } from "../utils/ipfsUtils";
 
 // LazyImage specific styles that extend common styles
 const createPlaceholderStyles = (width, height, compact = false) => ({
@@ -195,7 +194,9 @@ const LazyImage = ({
       {/* Show image when in view - use proxy to avoid CORS/ORB issues */}
       {inView && src && imageState !== "error" && (
         <img
-          src={toProxyUrl(src)}
+          src={`${
+            import.meta.env.VITE_DEMO_SERVER || "http://localhost:3041"
+          }/ipfs?url=${encodeURIComponent(src)}`}
           alt={alt}
           style={{
             width: "100%",

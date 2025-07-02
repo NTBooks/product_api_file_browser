@@ -8,7 +8,7 @@ import {
     deleteFile,
     stampCollection,
 } from "../services/api";
-import { toProxyUrl } from "../utils/ipfsUtils";
+
 
 // Query keys for consistent caching
 export const queryKeys = {
@@ -133,7 +133,8 @@ export const useJsonContent = (fileInfo) => {
             }
 
             // Use proxy URL to avoid CORS issues
-            const proxyUrl = toProxyUrl(fileInfo.gatewayurl);
+            const encodedUrl = encodeURIComponent(fileInfo.gatewayurl);
+            const proxyUrl = `${import.meta.env.VITE_DEMO_SERVER || 'http://localhost:3041'}/ipfs?url=${encodedUrl}`;
             console.log('Fetching JSON content via proxy:', proxyUrl);
             const response = await fetch(proxyUrl);
 
@@ -167,7 +168,8 @@ export const useTextContent = (fileInfo) => {
             }
 
             // Use proxy URL to avoid CORS issues
-            const proxyUrl = toProxyUrl(fileInfo.gatewayurl);
+            const encodedUrl = encodeURIComponent(fileInfo.gatewayurl);
+            const proxyUrl = `${import.meta.env.VITE_DEMO_SERVER || 'http://localhost:3041'}/ipfs?url=${encodedUrl}`;
             console.log('Fetching text content via proxy:', proxyUrl);
             const response = await fetch(proxyUrl);
 

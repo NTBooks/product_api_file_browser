@@ -54,7 +54,6 @@ import {
   alertWithMargin,
   fullWidth,
 } from "../utils/commonStyles";
-import { toProxyUrl } from "../utils/ipfsUtils";
 
 const FilesPage = () => {
   const { groupId } = useParams();
@@ -277,7 +276,11 @@ const FilesPage = () => {
           <LazyImage
             src={
               getResizedImageUrl(file.gatewayurl) ||
-              toProxyUrl(`https://ipfs.io/ipfs/${file.hash}`)
+              `${
+                import.meta.env.VITE_DEMO_SERVER || "http://localhost:3041"
+              }/ipfs?url=${encodeURIComponent(
+                `https://ipfs.io/ipfs/${file.hash}`
+              )}`
             }
             alt={file.name}
             width="100%"

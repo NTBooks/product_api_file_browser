@@ -37,7 +37,7 @@ import {
 import LazyImage from "../components/LazyImage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getFileInfo, deleteFile } from "../services/api";
-import { toProxyUrl } from "../utils/ipfsUtils";
+
 import {
   flexSpaceBetween,
   flexCenterVertical,
@@ -420,7 +420,10 @@ const FileDetailPage = () => {
                     minHeight: "600px",
                   }}>
                   <iframe
-                    src={toProxyUrl(fileInfo.gatewayurl)}
+                    src={`${
+                      import.meta.env.VITE_DEMO_SERVER ||
+                      "http://localhost:3041"
+                    }/ipfs?url=${encodeURIComponent(fileInfo.gatewayurl)}`}
                     width="100%"
                     height="100%"
                     style={{ border: "none", borderRadius: "4px" }}

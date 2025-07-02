@@ -46,7 +46,7 @@ const getCredentialsFromSession = (req) => {
         return {
             apikey: process.env.API_KEY,
             secretKey: process.env.API_SECRET,
-            network: process.env.API_NETWORK || 'public'
+            network: 'public' // Default network for hardcoded credentials
         };
     }
 
@@ -154,7 +154,7 @@ app.get('/api/credentials', (req, res) => {
                 success: true,
                 data: {
                     apikey: process.env.API_KEY.substring(0, 8) + '...',
-                    network: process.env.API_NETWORK || 'public',
+                    network: 'public', // Default for hardcoded credentials
                     source: 'environment'
                 }
             });
