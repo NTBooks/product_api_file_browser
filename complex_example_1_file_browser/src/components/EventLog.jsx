@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Fab,
@@ -25,11 +25,14 @@ import { useEvents } from "../contexts/EventContext";
 
 const EventLog = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(false);
   const { events, isConnected, connectionError, clearEvents } = useEvents();
 
   const getEventColor = (eventType) => {
     switch (eventType) {
       case "file.uploaded":
+        return "success";
+      case "file.pinned":
         return "success";
       case "file.deleted":
         return "error";
@@ -50,6 +53,8 @@ const EventLog = () => {
     switch (eventType) {
       case "file.uploaded":
         return "📁";
+      case "file.pinned":
+        return "📌";
       case "file.deleted":
         return "🗑️";
       case "collection.stamped":
@@ -65,6 +70,15 @@ const EventLog = () => {
     setIsOpen(!isOpen);
   };
 
+  // Pulse animation when new events are added
+  useEffect(() => {
+    if (events.length > 0) {
+      setIsPulsing(true);
+      const timer = setTimeout(() => setIsPulsing(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [events.length]);
+
   return (
     <>
       {/* Floating Action Button */}
@@ -74,9 +88,24 @@ const EventLog = () => {
         onClick={toggleDrawer}
         sx={{
           position: "fixed",
-          bottom: 16,
+          bottom: 216, // Moved up 200px from 16
           right: 16,
           zIndex: 1000,
+          animation: isPulsing ? "pulse 1s ease-in-out" : "none",
+          "@keyframes pulse": {
+            "0%": {
+              transform: "scale(1)",
+              boxShadow: "0 0 0 0 rgba(25, 118, 210, 0.7)",
+            },
+            "50%": {
+              transform: "scale(1.1)",
+              boxShadow: "0 0 0 10px rgba(25, 118, 210, 0)",
+            },
+            "100%": {
+              transform: "scale(1)",
+              boxShadow: "0 0 0 0 rgba(25, 118, 210, 0)",
+            },
+          },
         }}>
         <NotificationsIcon />
         {events.length > 0 && (

@@ -8,8 +8,8 @@ axios.defaults.withCredentials = true
 // Configure axios to handle redirects properly
 axios.defaults.maxRedirects = 5 // Allow up to 5 redirects
 axios.defaults.validateStatus = (status) => {
-    // Accept 2xx and 3xx status codes (including redirects)
-    return status >= 200 && status < 400
+    // Accept 2xx, 3xx, and 409 status codes (including redirects and file conflicts)
+    return (status >= 200 && status < 400) || status === 409
 }
 
 // Add response interceptor to handle authentication errors and redirects
@@ -144,6 +144,13 @@ export const uploadFile = async (file, groupId, network) => {
         }
     })
 
+    // Handle 409 Conflict as a successful response with existing file data
+    if (response.status === 409) {
+        console.log("409 response received:", response.data);
+        return response.data;
+    }
+
+    console.log("Normal upload response:", response.data);
     return response.data
 }
 

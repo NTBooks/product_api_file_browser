@@ -14,6 +14,7 @@ import GroupsPage from "./pages/GroupsPage";
 import FilesPage from "./pages/FilesPage";
 import FileDetailPage from "./pages/FileDetailPage";
 import EventLogProvider from "./components/EventLogProvider";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -51,52 +52,54 @@ function App() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <EventLogProvider>
-        <Box sx={{ flexGrow: 1 }}>
-          <AppBar position="static">
-            <Toolbar>
-              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                File Browser
-              </Typography>
-              <Button
-                color="inherit"
-                startIcon={<DashboardIcon />}
-                onClick={() => navigate("/")}
-                sx={{
-                  backgroundColor: isActive("/")
-                    ? "rgba(255,255,255,0.1)"
-                    : "transparent",
-                  mr: 1,
-                }}>
-                Dashboard
-              </Button>
-              <Button
-                color="inherit"
-                startIcon={<FolderIcon />}
-                onClick={() => navigate("/groups")}
-                sx={{
-                  backgroundColor: isActive("/groups")
-                    ? "rgba(255,255,255,0.1)"
-                    : "transparent",
-                }}>
-                Groups
-              </Button>
-            </Toolbar>
-          </AppBar>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <EventLogProvider>
+          <Box sx={{ flexGrow: 1 }}>
+            <AppBar position="static">
+              <Toolbar>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                  File Browser
+                </Typography>
+                <Button
+                  color="inherit"
+                  startIcon={<DashboardIcon />}
+                  onClick={() => navigate("/")}
+                  sx={{
+                    backgroundColor: isActive("/")
+                      ? "rgba(255,255,255,0.1)"
+                      : "transparent",
+                    mr: 1,
+                  }}>
+                  Dashboard
+                </Button>
+                <Button
+                  color="inherit"
+                  startIcon={<FolderIcon />}
+                  onClick={() => navigate("/groups")}
+                  sx={{
+                    backgroundColor: isActive("/groups")
+                      ? "rgba(255,255,255,0.1)"
+                      : "transparent",
+                  }}>
+                  Groups
+                </Button>
+              </Toolbar>
+            </AppBar>
 
-          <Container maxWidth="xl" sx={{ mt: 3 }}>
-            <Routes>
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/groups" element={<GroupsPage />} />
-              <Route path="/files/:groupId" element={<FilesPage />} />
-              <Route path="/file/:hash" element={<FileDetailPage />} />
-            </Routes>
-          </Container>
-        </Box>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </EventLogProvider>
-    </QueryClientProvider>
+            <Container maxWidth="xl" sx={{ mt: 3 }}>
+              <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/groups" element={<GroupsPage />} />
+                <Route path="/files/:groupId" element={<FilesPage />} />
+                <Route path="/file/:hash" element={<FileDetailPage />} />
+              </Routes>
+            </Container>
+          </Box>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </EventLogProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

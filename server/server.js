@@ -466,6 +466,44 @@ app.get('/api/group-stats/:groupId', requireCredentials, async (req, res) => {
     }
 });
 
+// GET /healthcheck - Health check endpoint for proxy availability
+app.get('/healthcheck', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        service: 'file-browser-proxy',
+        version: '1.0.0'
+    });
+});
+
+// GET /api/healthcheck - Health check endpoint accessible via Vite proxy
+app.get('/api/healthcheck', async (req, res) => {
+    try {
+        // Test the remote proxy server connection with a 1-second timeout
+        const response = await axios.get(`${API_BASE_URL}/healthcheck`, {
+            timeout: 1000 // 1 second timeout
+        });
+
+        res.json({
+            status: 'ok',
+            timestamp: new Date().toISOString(),
+            service: 'file-browser-proxy',
+            version: '1.0.0',
+            remoteStatus: 'connected'
+        });
+    } catch (error) {
+        console.log('Health check failed - remote proxy server unavailable:', error.message);
+        res.status(503).json({
+            status: 'error',
+            timestamp: new Date().toISOString(),
+            service: 'file-browser-proxy',
+            version: '1.0.0',
+            remoteStatus: 'unavailable',
+            error: error.message
+        });
+    }
+});
+
 // GET /ipfs - Proxy IPFS content to handle CORS and ORB issues
 app.get('/ipfs', async (req, res) => {
     try {
@@ -523,65 +561,86 @@ app.get('/ipfs', async (req, res) => {
 
 // Webhook events stream endpoint (proxied)
 app.get('/api/webhook/events/stream', requireCredentials, async (req, res) => {
-    try {
-        const { apikey, secretKey, network } = getCredentialsFromSession(req);
+    const { apikey, secretKey, network } = getCredentialsFromSession(req);
+    const maxRetries = 3;
+    let retryCount = 0;
 
-        // Set SSE headers
-        res.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Cache-Control'
-        });
+    const attemptConnection = async () => {
+        try {
+            console.log(`Attempting to connect to external SSE (attempt ${retryCount + 1}/${maxRetries}): ${API_BASE_URL}/webhook/${apikey}/events/stream`);
 
-        // Send initial connection message
-        res.write(`data: ${JSON.stringify({
-            id: `connection-${Date.now()}`,
-            type: 'connection.established',
-            tenant: apikey,
-            timestamp: new Date().toISOString(),
-            data: {
-                message: 'SSE connection established',
-                event_types: ['file.uploaded', 'file.deleted', 'collection.stamped']
-            }
-        })}\n\n`);
-
-        // Keep connection alive with periodic heartbeat
-        const heartbeat = setInterval(() => {
-            if (res.writableEnded) {
-                clearInterval(heartbeat);
-                return;
-            }
-
-            try {
-                res.write(`: heartbeat ${Date.now()}\n\n`);
-            } catch (error) {
-                console.error('Error sending heartbeat:', error);
-                clearInterval(heartbeat);
-            }
-        }, 30000); // Send heartbeat every 30 seconds
-
-        // Handle client disconnect
-        req.on('close', () => {
-            console.log(`SSE connection closed for tenant: ${apikey}`);
-            clearInterval(heartbeat);
-        });
-
-        req.on('error', (error) => {
-            console.error(`SSE connection error for tenant ${apikey}:`, error);
-            clearInterval(heartbeat);
-        });
-
-    } catch (error) {
-        console.error('SSE stream error:', error);
-        if (!res.headersSent) {
-            res.status(500).json({
-                success: false,
-                message: 'Internal server error'
+            // Proxy the SSE connection to the external API
+            const response = await axios.get(`${API_BASE_URL}/webhook/${apikey}/events/stream`, {
+                headers: {
+                    'secret-key': secretKey,
+                    'network': network
+                },
+                responseType: 'stream',
+                timeout: 60000 // Increase timeout to 60 seconds
             });
+
+            // Set SSE headers
+            res.writeHead(200, {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Cache-Control'
+            });
+
+            // Forward the stream from external API to client
+            response.data.pipe(res);
+
+            // Handle client disconnect
+            req.on('close', () => {
+                console.log(`SSE connection closed for tenant: ${apikey}`);
+                response.data.destroy();
+            });
+
+            req.on('error', (error) => {
+                console.error(`SSE connection error for tenant ${apikey}:`, error);
+                response.data.destroy();
+            });
+
+        } catch (error) {
+            console.error(`SSE stream error (attempt ${retryCount + 1}/${maxRetries}):`, error);
+            console.error('Error details:', {
+                message: error.message,
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                data: error.response?.data
+            });
+
+            // Check if we should retry
+            const shouldRetry = retryCount < maxRetries - 1 &&
+                (error.code === 'ECONNRESET' ||
+                    error.code === 'ETIMEDOUT' ||
+                    error.response?.status === 408 ||
+                    error.response?.status === 500 ||
+                    error.response?.status === 502 ||
+                    error.response?.status === 503 ||
+                    error.response?.status === 504);
+
+            if (shouldRetry) {
+                retryCount++;
+                console.log(`Retrying SSE connection in 2 seconds... (${retryCount}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                return attemptConnection();
+            }
+
+            // If we've exhausted retries or it's a non-retryable error
+            if (!res.headersSent) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Failed to connect to external webhook stream after multiple attempts',
+                    details: error.message,
+                    attempts: retryCount + 1
+                });
+            }
         }
-    }
+    };
+
+    await attemptConnection();
 });
 
 app.listen(PORT, () => {

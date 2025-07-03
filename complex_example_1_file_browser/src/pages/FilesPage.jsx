@@ -57,7 +57,153 @@ import {
   fullWidth,
 } from "../utils/commonStyles";
 
+// FileCard component moved outside to prevent recreation on re-renders
+const FileCard = ({
+  file,
+  groupId,
+  navigate,
+  isPendingUpload,
+  useEvents,
+  usePendingUpload,
+  isImageFile,
+  getResizedImageUrl,
+  getFileIcon,
+  formatBytes,
+  getNetworkColor,
+  formatBulkId,
+}) => {
+  // Use is_stamped directly from the API
+  const isStamped = file.is_stamped || false;
+  const isPending = isPendingUpload(file.hash);
+  const { isConfirmed, isConnected } = usePendingUpload(file.hash);
+
+  // Determine upload state based on events
+  const { events } = useEvents();
+  const fileEvents = events.filter(
+    (event) =>
+      event.data?.hash === file.hash &&
+      (event.type === "file.uploaded" || event.type === "file.pinned")
+  );
+
+  let uploadState = null;
+  if (isPending) {
+    // Check if we have a file.uploaded event but no file.pinned event
+    const hasUploadedEvent = fileEvents.some(
+      (event) => event.type === "file.uploaded"
+    );
+    const hasPinnedEvent = fileEvents.some(
+      (event) => event.type === "file.pinned"
+    );
+
+    if (hasPinnedEvent) {
+      uploadState = "pinned";
+    } else if (hasUploadedEvent) {
+      uploadState = "uploaded";
+    } else {
+      uploadState = "pinning";
+    }
+  }
+
+  return (
+    <Card
+      sx={{
+        ...cardFullHeight,
+        cursor: isPending && !isConfirmed ? "not-allowed" : "pointer",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        opacity: isPending && !isConfirmed ? 0.7 : 1,
+        "&:hover": {
+          transform: isPending && !isConfirmed ? "none" : "translateY(-4px)",
+          boxShadow: isPending && !isConfirmed ? 1 : 4,
+        },
+      }}
+      onClick={() => {
+        if (!isPending || isConfirmed) {
+          navigate(`/file/${file.hash}`, {
+            state: { fileData: file, groupId: groupId },
+          });
+        }
+      }}>
+      {isImageFile(file.name) && (
+        <LazyImage
+          src={
+            getResizedImageUrl(file.gatewayurl) ||
+            `${
+              import.meta.env.VITE_DEMO_SERVER || "http://localhost:3041"
+            }/ipfs?url=${encodeURIComponent(
+              `https://ipfs.io/ipfs/${file.hash}`
+            )}`
+          }
+          alt={file.name}
+          width="100%"
+          height="200px"
+          compact={true}
+          isPending={isPending && !isConfirmed}
+          uploadState={uploadState}
+          sx={{
+            objectFit: "contain",
+            backgroundColor: "#f5f5f5",
+            borderBottom: "1px solid #e0e0e0",
+            minHeight: "200px", // Ensure consistent height
+          }}
+        />
+      )}
+      <CardContent>
+        <Box sx={{ ...flexCenterVertical, ...marginBottom(1) }}>
+          {getFileIcon(file.name)}
+          <Typography
+            variant="h6"
+            component="div"
+            sx={textWithMargin(1)}
+            noWrap>
+            {file.name}
+          </Typography>
+        </Box>
+
+        <Typography
+          variant="body2"
+          sx={{ ...textSecondary, ...marginBottom(1) }}>
+          Size: {formatBytes(file.size)}
+        </Typography>
+
+        <Box sx={flexGapWrap(1)}>
+          <Chip
+            label={file.network}
+            color={getNetworkColor(file.network)}
+            size="small"
+          />
+          {isPending && !isConfirmed ? (
+            <Chip
+              label={isConnected ? "Pending IPFS" : "Waiting for connection"}
+              color="warning"
+              icon={
+                isConnected ? <CircularProgress size={16} /> : <WarningIcon />
+              }
+              size="small"
+            />
+          ) : (
+            <Chip
+              label={isStamped ? "Stamped" : "Not Stamped"}
+              color={isStamped ? "success" : "warning"}
+              icon={isStamped ? <CheckCircleIcon /> : <CancelIcon />}
+              size="small"
+            />
+          )}
+          {file.bulk_check?.postmark_hash && (
+            <Chip
+              label={`Stamp: ${formatBulkId(file.bulk_check.postmark_hash)}`}
+              color="info"
+              size="small"
+              variant="outlined"
+            />
+          )}
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
 const FilesPage = () => {
+  console.log("FilesPage component rendering");
   const { groupId } = useParams();
   const navigate = useNavigate();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -67,6 +213,8 @@ const FilesPage = () => {
     message: "",
     severity: "success",
   });
+  const [proxyAvailable, setProxyAvailable] = useState(true);
+  const [healthCheckComplete, setHealthCheckComplete] = useState(false);
   const { addPendingUpload, isPendingUpload } = useEvents();
 
   // Use React Query hooks
@@ -87,6 +235,63 @@ const FilesPage = () => {
 
   const uploadMutation = useUploadFile();
   const stampMutation = useStampCollection();
+
+  // Check proxy availability using health check endpoint
+  useEffect(() => {
+    console.log("FilesPage mounted, starting proxy health check...");
+
+    const checkProxyHealth = async () => {
+      console.log("checkProxyHealth function called");
+      try {
+        console.log("Making fetch request to /api/healthcheck...");
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+        const response = await fetch("/api/healthcheck", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        console.log("Fetch response received:", response.status);
+
+        if (response.ok) {
+          const healthData = await response.json();
+          console.log("Proxy health check successful:", healthData);
+          setProxyAvailable(true);
+        } else {
+          console.error("Proxy health check failed:", response.status);
+          setProxyAvailable(false);
+        }
+      } catch (error) {
+        console.error("Proxy health check failed:", error);
+        setProxyAvailable(false);
+      } finally {
+        console.log(
+          "Health check complete, setting healthCheckComplete to true"
+        );
+        setHealthCheckComplete(true);
+      }
+    };
+
+    // Call health check immediately
+    checkProxyHealth();
+
+    // Check health every 30 seconds
+    const healthInterval = setInterval(() => {
+      console.log("Periodic health check triggered");
+      checkProxyHealth();
+    }, 30000);
+
+    return () => {
+      console.log("Cleaning up health check interval");
+      clearInterval(healthInterval);
+    };
+  }, []);
 
   // Process files to determine stamping status
   const files = (filesData?.files || []).map((file) => ({
@@ -208,23 +413,42 @@ const FilesPage = () => {
       { file: selectedFile, groupId, network },
       {
         onSuccess: (response) => {
-          // If the upload response includes a hash, add it to pending uploads
-          if (response && response.hash) {
+          console.log("Upload response:", response); // Debug log
+
+          // Check if this was a 409 response (file already exists)
+          if (
+            response &&
+            response.success === false &&
+            response.message === "File already exists in group"
+          ) {
+            setSnackbar({
+              open: true,
+              message: `File already exists in this group`,
+              severity: "warning",
+            });
+            setUploadDialogOpen(false);
+            setSelectedFile(null);
+            // Refresh the files list to show the existing file
+            refetchFiles();
+          } else if (response && response.hash) {
+            // Normal upload success
             addPendingUpload(response.hash);
             setSnackbar({
               open: true,
               message: "File uploaded! Waiting for IPFS confirmation...",
               severity: "info",
             });
+            setUploadDialogOpen(false);
+            setSelectedFile(null);
           } else {
             setSnackbar({
               open: true,
               message: "File uploaded successfully!",
               severity: "success",
             });
+            setUploadDialogOpen(false);
+            setSelectedFile(null);
           }
-          setUploadDialogOpen(false);
-          setSelectedFile(null);
         },
         onError: (error) => {
           setSnackbar({
@@ -265,107 +489,70 @@ const FilesPage = () => {
     );
   };
 
-  const FileCard = ({ file }) => {
-    // Use is_stamped directly from the API
-    const isStamped = file.is_stamped || false;
-    const isPending = isPendingUpload(file.hash);
-    const { isConfirmed, isConnected } = usePendingUpload(file.hash);
-
+  // Show loading state while health check is in progress
+  if (!healthCheckComplete) {
     return (
-      <Card
+      <Box
         sx={{
-          ...cardFullHeight,
-          cursor: isPending && !isConfirmed ? "not-allowed" : "pointer",
-          transition: "transform 0.2s, box-shadow 0.2s",
-          opacity: isPending && !isConfirmed ? 0.7 : 1,
-          "&:hover": {
-            transform: isPending && !isConfirmed ? "none" : "translateY(-4px)",
-            boxShadow: isPending && !isConfirmed ? 1 : 4,
-          },
-        }}
-        onClick={() => {
-          if (!isPending || isConfirmed) {
-            navigate(`/file/${file.hash}`, {
-              state: { fileData: file, groupId: groupId },
-            });
-          }
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+          textAlign: "center",
+          p: 3,
         }}>
-        {isImageFile(file.name) && (
-          <LazyImage
-            src={
-              getResizedImageUrl(file.gatewayurl) ||
-              `${
-                import.meta.env.VITE_DEMO_SERVER || "http://localhost:3041"
-              }/ipfs?url=${encodeURIComponent(
-                `https://ipfs.io/ipfs/${file.hash}`
-              )}`
-            }
-            alt={file.name}
-            width="100%"
-            height="200px"
-            compact={true}
-            sx={{
-              objectFit: "contain",
-              backgroundColor: "#f5f5f5",
-              borderBottom: "1px solid #e0e0e0",
-              minHeight: "200px", // Ensure consistent height
-            }}
-          />
-        )}
-        <CardContent>
-          <Box sx={{ ...flexCenterVertical, ...marginBottom(1) }}>
-            {getFileIcon(file.name)}
-            <Typography
-              variant="h6"
-              component="div"
-              sx={textWithMargin(1)}
-              noWrap>
-              {file.name}
-            </Typography>
-          </Box>
-
-          <Typography
-            variant="body2"
-            sx={{ ...textSecondary, ...marginBottom(1) }}>
-            Size: {formatBytes(file.size)}
-          </Typography>
-
-          <Box sx={flexGapWrap(1)}>
-            <Chip
-              label={file.network}
-              color={getNetworkColor(file.network)}
-              size="small"
-            />
-            {isPending && !isConfirmed ? (
-              <Chip
-                label={isConnected ? "Pending IPFS" : "Waiting for connection"}
-                color="warning"
-                icon={
-                  isConnected ? <CircularProgress size={16} /> : <WarningIcon />
-                }
-                size="small"
-              />
-            ) : (
-              <Chip
-                label={isStamped ? "Stamped" : "Not Stamped"}
-                color={isStamped ? "success" : "warning"}
-                icon={isStamped ? <CheckCircleIcon /> : <CancelIcon />}
-                size="small"
-              />
-            )}
-            {file.bulk_check?.postmark_hash && (
-              <Chip
-                label={`Stamp: ${formatBulkId(file.bulk_check.postmark_hash)}`}
-                color="info"
-                size="small"
-                variant="outlined"
-              />
-            )}
-          </Box>
-        </CardContent>
-      </Card>
+        <CircularProgress size={60} sx={{ mb: 3 }} />
+        <Typography variant="h6" gutterBottom>
+          Checking Proxy Server...
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Verifying connection to the proxy server
+        </Typography>
+      </Box>
     );
-  };
+  }
+
+  // Show full-page error if proxy is unavailable
+  if (!proxyAvailable) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+          textAlign: "center",
+          p: 3,
+        }}>
+        <Alert
+          severity="error"
+          sx={{
+            maxWidth: 600,
+            mb: 3,
+          }}>
+          <Typography variant="h5" component="h2" gutterBottom>
+            Proxy Server Unavailable
+          </Typography>
+          <Typography variant="body1" paragraph>
+            The proxy server is not running or is not accessible. This
+            application requires the proxy server to function properly.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Please ensure the proxy server is running on port 3041 and try
+            refreshing the page.
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => window.location.reload()}
+            sx={{ mt: 2 }}>
+            Refresh Page
+          </Button>
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -479,7 +666,20 @@ const FilesPage = () => {
         <Grid container spacing={3}>
           {files.map((file) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={file.hash}>
-              <FileCard file={file} />
+              <FileCard
+                file={file}
+                groupId={groupId}
+                navigate={navigate}
+                isPendingUpload={isPendingUpload}
+                useEvents={useEvents}
+                usePendingUpload={usePendingUpload}
+                isImageFile={isImageFile}
+                getResizedImageUrl={getResizedImageUrl}
+                getFileIcon={getFileIcon}
+                formatBytes={formatBytes}
+                getNetworkColor={getNetworkColor}
+                formatBulkId={formatBulkId}
+              />
             </Grid>
           ))}
         </Grid>

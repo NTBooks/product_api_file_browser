@@ -1,4 +1,10 @@
-import { createContext, useContext, useReducer, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  useRef,
+} from "react";
 import { getCredentialsInfo } from "../services/api";
 
 const EventContext = createContext();
@@ -6,6 +12,7 @@ const EventContext = createContext();
 // Event types that we're interested in
 const EVENT_TYPES = {
   FILE_UPLOADED: "file.uploaded",
+  FILE_PINNED: "file.pinned",
   FILE_DELETED: "file.deleted",
   COLLECTION_STAMPED: "collection.stamped",
   CONNECTION_ESTABLISHED: "connection.established",
@@ -23,6 +30,42 @@ const initialState = {
 const eventReducer = (state, action) => {
   switch (action.type) {
     case "ADD_EVENT":
+      // Check for duplicate events based on id, type, timestamp, and hash
+      const isDuplicate = state.events.some((existingEvent) => {
+        // For file events, check hash and timestamp
+        if (
+          (action.payload.type === "file.uploaded" &&
+            existingEvent.type === "file.uploaded") ||
+          (action.payload.type === "file.pinned" &&
+            existingEvent.type === "file.pinned")
+        ) {
+          return (
+            existingEvent.data?.hash === action.payload.data?.hash &&
+            existingEvent.timestamp === action.payload.timestamp
+          );
+        }
+        // For connection events, check timestamp and message
+        if (
+          action.payload.type === "connection.established" &&
+          existingEvent.type === "connection.established"
+        ) {
+          return (
+            existingEvent.timestamp === action.payload.timestamp &&
+            existingEvent.data?.message === action.payload.data?.message
+          );
+        }
+        // For other events, check id and timestamp
+        return (
+          existingEvent.id === action.payload.id &&
+          existingEvent.timestamp === action.payload.timestamp
+        );
+      });
+
+      if (isDuplicate) {
+        console.log("Duplicate event detected, skipping:", action.payload);
+        return state;
+      }
+
       return {
         ...state,
         events: [action.payload, ...state.events].slice(0, 100), // Keep last 100 events
@@ -62,23 +105,57 @@ const eventReducer = (state, action) => {
 
 export const EventProvider = ({ children }) => {
   const [state, dispatch] = useReducer(eventReducer, initialState);
+  const eventSourceRef = useRef(null);
 
   // Connect to SSE stream
   const connectToEventStream = async () => {
+    // Prevent multiple connections
+    if (eventSourceRef.current) {
+      console.log("EventSource already exists, skipping connection");
+      return eventSourceRef.current;
+    }
+
     try {
       // Get API key from credentials using the existing API service
       const credentials = await getCredentialsInfo();
-      if (!credentials.success || !credentials.apikey) {
+      console.log("Credentials response:", credentials);
+
+      if (!credentials.success || !credentials.data?.apikey) {
+        console.log("Credentials check failed:", {
+          success: credentials.success,
+          hasData: !!credentials.data,
+          hasApikey: !!credentials.data?.apikey,
+          message: credentials.message,
+        });
         throw new Error("No credentials found");
       }
 
       console.log(
         "Connecting to event stream with API key:",
-        credentials.apikey
+        credentials.data.apikey
       );
-      const eventSource = new EventSource(`/api/webhook/events/stream`);
+      console.log("EventSource URL:", `/api/webhook/events/stream`);
+
+      // Wrap EventSource creation in try-catch to handle connection errors
+      let eventSource;
+      try {
+        eventSource = new EventSource(`/api/webhook/events/stream`);
+      } catch (error) {
+        console.error("Failed to create EventSource:", error);
+        dispatch({
+          type: "SET_CONNECTION_STATUS",
+          payload: {
+            isConnected: false,
+            error: "Failed to create connection",
+          },
+        });
+        return null;
+      }
+
+      eventSourceRef.current = eventSource;
 
       eventSource.onopen = () => {
+        console.log("EventSource connection opened successfully");
         dispatch({
           type: "SET_CONNECTION_STATUS",
           payload: { isConnected: true, error: null },
@@ -88,6 +165,7 @@ export const EventProvider = ({ children }) => {
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log("Received SSE event:", data); // Debug log
 
           // Add event to state
           dispatch({
@@ -107,6 +185,14 @@ export const EventProvider = ({ children }) => {
                 payload: data.data.hash,
               });
             }
+          } else if (data.type === EVENT_TYPES.FILE_PINNED) {
+            // Remove from pending uploads when file is pinned and ready for display
+            if (data.data && data.data.hash) {
+              dispatch({
+                type: "REMOVE_PENDING_UPLOAD",
+                payload: data.data.hash,
+              });
+            }
           }
         } catch (error) {
           console.error("Error parsing SSE event:", error);
@@ -115,11 +201,49 @@ export const EventProvider = ({ children }) => {
 
       eventSource.onerror = (error) => {
         console.error("SSE connection error:", error);
+        console.error("EventSource readyState:", eventSource.readyState);
+        console.error("EventSource URL:", eventSource.url);
+
+        // Check if this is a connection failure that should trigger a retry
+        const shouldRetry =
+          eventSource.readyState === EventSource.CLOSED ||
+          eventSource.readyState === EventSource.CONNECTING;
+
+        // Check for specific proxy connection error
+        const isProxyError =
+          error.message &&
+          error.message.includes("Receiving end does not exist");
+
         dispatch({
           type: "SET_CONNECTION_STATUS",
-          payload: { isConnected: false, error: "Connection failed" },
+          payload: {
+            isConnected: false,
+            error: isProxyError
+              ? "Receiving end does not exist"
+              : shouldRetry
+              ? "Connection failed, retrying..."
+              : "Connection failed",
+          },
         });
+
         eventSource.close();
+        eventSourceRef.current = null;
+
+        // Don't retry if it's a proxy error - just log it and continue
+        if (isProxyError) {
+          console.log(
+            "Proxy server not available, EventSource connection failed"
+          );
+          return;
+        }
+
+        // If it's a connection failure, retry after a delay
+        if (shouldRetry) {
+          setTimeout(() => {
+            console.log("Retrying SSE connection...");
+            connectToEventStream();
+          }, 5000); // Retry after 5 seconds
+        }
       };
 
       return eventSource;
@@ -129,6 +253,7 @@ export const EventProvider = ({ children }) => {
         type: "SET_CONNECTION_STATUS",
         payload: { isConnected: false, error: error.message },
       });
+      eventSourceRef.current = null;
     }
   };
 
@@ -158,6 +283,10 @@ export const EventProvider = ({ children }) => {
     const initConnection = async () => {
       try {
         eventSource = await connectToEventStream();
+        // If connection failed (returned null), retry after 5 seconds
+        if (!eventSource) {
+          retryTimeout = setTimeout(initConnection, 5000);
+        }
       } catch (error) {
         console.log("Failed to connect to event stream:", error.message);
         // Retry after 5 seconds if no credentials
@@ -170,8 +299,9 @@ export const EventProvider = ({ children }) => {
     initConnection();
 
     return () => {
-      if (eventSource) {
-        eventSource.close();
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
       }
       if (retryTimeout) {
         clearTimeout(retryTimeout);
