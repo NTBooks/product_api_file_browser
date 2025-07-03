@@ -146,6 +146,7 @@ const LazyImage = ({
   ...props
 }) => {
   const [imageState, setImageState] = useState("loading"); // 'loading', 'loaded', 'error'
+  const [triedIpfsFallback, setTriedIpfsFallback] = useState(false);
   const loadedImagesRef = useRef(new Set());
   const { ref, inView } = useInView({
     triggerOnce: true,
@@ -254,6 +255,17 @@ const LazyImage = ({
     </Box>
   );
 
+  // Helper to extract CID from src (assume src is a CID or an IPFS URL)
+  const getCidFromSrc = (src) => {
+    if (!src) return null;
+    // If src is just a CID
+    if (/^[a-zA-Z0-9]{46,}$/.test(src)) return src;
+    // If src is an ipfs:// or https://.../ipfs/CID
+    const match = src.match(/(?:ipfs:\/\/|\/ipfs\/)([a-zA-Z0-9]+)(?:\/|$)/);
+    if (match) return match[1];
+    return null;
+  };
+
   return (
     <Box
       ref={ref}
@@ -279,27 +291,35 @@ const LazyImage = ({
         imageState !== "error" &&
         (placeholder || (compact ? compactPlaceholder : defaultPlaceholder))}
 
-      {/* Show error component if image failed to load (only if not pending and not in upload states) */}
+      {/* Show error component only if both proxy and ipfs.io fail */}
       {!isPending &&
         uploadState !== "uploaded" &&
         uploadState !== "pinning" &&
         imageState === "error" &&
+        triedIpfsFallback &&
         (errorComponent ||
           (compact ? compactErrorComponent : defaultErrorComponent))}
 
-      {/* Show image when in view - use proxy to avoid CORS/ORB issues */}
+      {/* Show image when in view - use proxy to avoid CORS/ORB issues, fallback to ipfs.io if proxy fails */}
       {/* Only load image if not pending and upload state is 'pinned' or null (already pinned) */}
       {!isPending &&
         uploadState !== "uploaded" &&
         uploadState !== "pinning" &&
         inView &&
         src &&
-        imageState !== "error" && (
+        (imageState !== "error" || !triedIpfsFallback) && (
           <img
-            key={src} // Prevent unnecessary re-creation
-            src={`${
-              import.meta.env.VITE_DEMO_SERVER || "http://localhost:3041"
-            }/ipfs?url=${encodeURIComponent(src)}`}
+            key={src + (triedIpfsFallback ? "-ipfs" : "-proxy")}
+            src={
+              !triedIpfsFallback
+                ? `${
+                    import.meta.env.VITE_DEMO_SERVER || "http://localhost:3041"
+                  }/ipfs?url=${encodeURIComponent(src)}`
+                : (() => {
+                    const cid = getCidFromSrc(src);
+                    return cid ? `https://ipfs.io/ipfs/${cid}` : src;
+                  })()
+            }
             alt={alt}
             style={{
               width: "100%",
@@ -313,7 +333,14 @@ const LazyImage = ({
               setImageState("loaded");
               loadedImagesRef.current.add(src);
             }}
-            onError={() => setImageState("error")}
+            onError={() => {
+              if (!triedIpfsFallback) {
+                setTriedIpfsFallback(true);
+                setImageState("loading");
+              } else {
+                setImageState("error");
+              }
+            }}
           />
         )}
     </Box>
