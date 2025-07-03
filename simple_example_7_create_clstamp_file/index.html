@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPFS Stamp File Creator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>.clstamp File Creator</h1>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Click to select a file or drag and drop</div>
+            <div class="upload-subtext">Create a .zip.clstamp file with IPFS hash verification</div>
+            <input type="file" id="fileInput" accept="*/*">
+        </div>
+
+        <div class="result" id="result">
+            <div class="file-info">
+                <span class="file-name" id="fileName"></span>
+                <span class="file-size" id="fileSize"></span>
+            </div>
+            <div>
+                <strong>IPFS CID:</strong>
+                <div class="hash-display" id="ipfsHash"></div>
+            </div>
+            <div>
+                <strong>SHA-256:</strong>
+                <div class="hash-display" id="shaHash"></div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <div>Creating stamp file...</div>
+        </div>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/ipfs-unixfs-importer@10.0.0/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+    <!-- Application Script -->
+    <script src="script.js"></script>
+</body>
+
+</html>
