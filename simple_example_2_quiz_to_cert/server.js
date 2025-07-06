@@ -2,6 +2,7 @@ const express = require('express');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs').promises;
+const axios = require('axios');
 const envPath = path.resolve(__dirname, '../.env');
 console.log('Looking for .env at:', envPath);
 require('dotenv').config({ path: envPath });
@@ -152,7 +153,7 @@ app.post('/api/submit-quiz', async (req, res) => {
 
         // Generate certificate
         const certBuffer = await generateCertificate(name);
-        const certPath = path.join(__dirname, 'cert.jpg');
+        const certPath = path.join(__dirname, 'cert.png');
         await fs.writeFile(certPath, certBuffer);
 
         // Upload certificate file (creates collection if it doesn't exist)
@@ -160,10 +161,9 @@ app.post('/api/submit-quiz', async (req, res) => {
         const FormData = require('form-data');
         const formData = new FormData();
         formData.append('file', certBuffer, {
-            filename: 'cert.jpg',
-            contentType: 'image/jpeg'
+            filename: 'cert.png',
+            contentType: 'image/png'
         });
-        formData.append('groupId', collectionName);
 
         console.log('Uploading certificate...');
         console.log('Certificate buffer size:', certBuffer.length);
@@ -172,44 +172,30 @@ app.post('/api/submit-quiz', async (req, res) => {
         let fileHash = 'unknown';
 
         try {
-            const uploadResponse = await fetch(`${API_BASE_URL}/webhook/${API_KEY}`, {
-                method: 'POST',
+            const response = await axios.post(`${API_BASE_URL}/webhook/${API_KEY}`, formData, {
                 headers: {
                     'secret-key': API_SECRET,
                     'group-id': collectionName,
-                    'network': API_NETWORK
-                },
-                body: formData
+                    'network': API_NETWORK,
+                    ...formData.getHeaders() // Include FormData headers
+                }
             });
 
-            console.log('Upload response status:', uploadResponse.status);
-
-            if (!uploadResponse.ok) {
-                const errorText = await uploadResponse.text();
-                console.error('Failed to upload certificate:', uploadResponse.status);
-                console.error('Error response:', errorText);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Failed to upload certificate',
-                    error: errorText
-                });
-            }
-
-            const uploadData = await uploadResponse.json();
-            console.log('Upload successful:', uploadData);
-            fileHash = uploadData?.hash || 'unknown';
+            console.log('Upload response status:', response.status);
+            console.log('Upload successful:', response.data);
+            fileHash = response.data?.hash || 'unknown';
         } catch (error) {
-            console.error('Failed to upload certificate:', error.message);
+            console.error('Failed to upload certificate:', error.response?.data || error.message);
             return res.status(500).json({
                 success: false,
-                message: 'Failed to upload certificate'
+                message: 'Failed to upload certificate',
+                error: error.response?.data || error.message
             });
         }
 
         // Stamp the collection after uploading the certificate
         try {
-            const stampResponse = await fetch(`${API_BASE_URL}/webhook/${API_KEY}`, {
-                method: 'PATCH',
+            const stampResponse = await axios.patch(`${API_BASE_URL}/webhook/${API_KEY}`, {}, {
                 headers: {
                     'Content-Type': 'application/json',
                     'secret-key': API_SECRET,
@@ -218,13 +204,13 @@ app.post('/api/submit-quiz', async (req, res) => {
                 }
             });
 
-            if (stampResponse.ok) {
+            if (stampResponse.status === 200) {
                 console.log('Collection stamped successfully');
             } else {
                 console.error('Failed to stamp collection:', stampResponse.status);
             }
         } catch (error) {
-            console.error('Failed to stamp collection:', error.message);
+            console.error('Failed to stamp collection:', error.response?.data || error.message);
         }
 
         res.json({
@@ -245,8 +231,8 @@ app.post('/api/submit-quiz', async (req, res) => {
     }
 });
 
-// API endpoint to check file status
-app.get('/api/file-status/:hash', async (req, res) => {
+// API endpoint to get file info from group (includes gatewayurl)
+app.get('/api/file-info/:hash', async (req, res) => {
     try {
         const { hash } = req.params;
 
@@ -257,10 +243,9 @@ app.get('/api/file-status/:hash', async (req, res) => {
             });
         }
 
-        // Get all files in the "Course Complete" collection
+        // Get file info from group (includes gatewayurl)
         try {
-            const response = await fetch(`${API_BASE_URL}/webhook/${API_KEY}`, {
-                method: 'GET',
+            const response = await axios.get(`${API_BASE_URL}/webhook/${API_KEY}`, {
                 headers: {
                     'secret-key': API_SECRET,
                     'network': API_NETWORK,
@@ -268,8 +253,8 @@ app.get('/api/file-status/:hash', async (req, res) => {
                 }
             });
 
-            if (response.ok) {
-                const data = await response.json();
+            if (response.status === 200) {
+                const data = response.data;
 
                 if (data.files) {
                     // Find the specific file by hash
@@ -302,12 +287,95 @@ app.get('/api/file-status/:hash', async (req, res) => {
                 });
             }
         } catch (error) {
-            console.error('File status check error:', error);
+            console.error('File info check error:', error.response?.data || error.message);
             res.status(500).json({
                 success: false,
-                message: 'Failed to get collection files',
-                error: error.message
+                message: 'Failed to get file info',
+                error: error.response?.data || error.message
             });
+        }
+
+    } catch (error) {
+        console.error('File info check error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+});
+
+// API endpoint to check file status (blockchain details)
+app.get('/api/file-status/:hash', async (req, res) => {
+    try {
+        const { hash } = req.params;
+
+        if (!hash) {
+            return res.status(400).json({
+                success: false,
+                message: 'File hash is required'
+            });
+        }
+
+        // Get specific file status with blockchain info and export links
+        try {
+            const response = await axios.get(`${API_BASE_URL}/webhook/${API_KEY}`, {
+                headers: {
+                    'secret-key': API_SECRET,
+                    'network': API_NETWORK,
+                    'hash': hash,
+                    'export-links': 'true'
+                }
+            });
+
+            if (response.status === 200) {
+                res.json({
+                    success: true,
+                    data: response.data
+                });
+            } else {
+                res.status(response.status).json({
+                    success: false,
+                    message: 'Failed to get file status',
+                    error: `HTTP ${response.status}`
+                });
+            }
+        } catch (error) {
+            // If export-links fails, try without it
+            console.log('Export-links request failed, trying without export-links...');
+            try {
+                const fallbackResponse = await axios.get(`${API_BASE_URL}/webhook/${API_KEY}`, {
+                    headers: {
+                        'secret-key': API_SECRET,
+                        'network': API_NETWORK,
+                        'hash': hash
+                    }
+                });
+
+                if (fallbackResponse.status === 200) {
+                    // Add null claim_link to indicate export-links failed
+                    const data = fallbackResponse.data;
+                    if (data && data.data) {
+                        data.data.claim_link = null;
+                    }
+                    res.json({
+                        success: true,
+                        data: data
+                    });
+                } else {
+                    res.status(fallbackResponse.status).json({
+                        success: false,
+                        message: 'Failed to get file status',
+                        error: `HTTP ${fallbackResponse.status}`
+                    });
+                }
+            } catch (fallbackError) {
+                console.error('File status check error:', fallbackError.response?.data || fallbackError.message);
+                res.status(500).json({
+                    success: false,
+                    message: 'Failed to get file status',
+                    error: fallbackError.response?.data || fallbackError.message
+                });
+            }
         }
 
     } catch (error) {
@@ -315,6 +383,61 @@ app.get('/api/file-status/:hash', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Internal server error'
+        });
+    }
+});
+
+// GET /ipfs - Proxy IPFS content to handle CORS and ORB issues
+app.get('/ipfs', async (req, res) => {
+    try {
+        const { url } = req.query;
+
+        if (!url) {
+            return res.status(400).json({
+                success: false,
+                message: 'URL query parameter is required'
+            });
+        }
+
+        console.log(`Proxying IPFS content from: ${url}`);
+
+        const response = await axios.get(url, {
+            responseType: 'stream',
+            timeout: 10000,
+            maxRedirects: 5,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; FileBrowser/1.0)',
+                'Accept': 'image/*,text/*,application/*,*/*',
+                'Cookie': 'maint_bypass=p00pp00p'
+            }
+        });
+
+        // Forward the response headers
+        const contentType = response.headers['content-type'];
+        const contentLength = response.headers['content-length'];
+        const cacheControl = response.headers['cache-control'];
+        const etag = response.headers['etag'];
+
+        if (contentType) res.setHeader('Content-Type', contentType);
+        if (contentLength) res.setHeader('Content-Length', contentLength);
+        if (cacheControl) res.setHeader('Cache-Control', cacheControl);
+        if (etag) res.setHeader('ETag', etag);
+
+        // Set CORS headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Range');
+
+        // Stream the response
+        response.data.pipe(res);
+
+    } catch (error) {
+        console.error('IPFS proxy error:', error.message);
+
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch IPFS content',
+            error: error.message
         });
     }
 });

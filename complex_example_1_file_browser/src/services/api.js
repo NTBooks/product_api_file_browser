@@ -17,7 +17,6 @@ axios.interceptors.response.use(
     (response) => {
         // Handle 302 redirects by following them
         if (response.status === 302 && response.headers.location) {
-            console.log('Following 302 redirect to:', response.headers.location)
             // The browser will automatically follow the redirect
             return response
         }
@@ -28,12 +27,11 @@ axios.interceptors.response.use(
             error.response?.status === 401 ||
             error.response?.status === 403) {
             // Clear any stored credentials on auth errors
-            console.log('Authentication error detected, clearing credentials')
         }
 
         // Log redirect errors for debugging
         if (error.response?.status === 302) {
-            console.log('302 redirect detected:', error.response.headers.location)
+            // Handle redirect errors silently
         }
 
         return Promise.reject(error)
@@ -119,13 +117,6 @@ export const getFileInfo = async (hash) => {
 
 // Upload a file
 export const uploadFile = async (file, groupId, network) => {
-    console.log('Uploading file:', file);
-    console.log('File type:', typeof file);
-    console.log('File constructor:', file.constructor.name);
-    console.log('Is File object:', file instanceof File);
-    console.log('Group ID:', groupId);
-    console.log('Network:', network);
-
     // Validate that file is a proper File object
     if (!file || !(file instanceof File)) {
         throw new Error('Invalid file object provided');
@@ -136,8 +127,6 @@ export const uploadFile = async (file, groupId, network) => {
     formData.append('groupId', groupId)
     formData.append('network', network)
 
-    console.log('FormData created successfully');
-
     const response = await axios.post(`${API_BASE_URL}/upload`, formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
@@ -146,11 +135,9 @@ export const uploadFile = async (file, groupId, network) => {
 
     // Handle 409 Conflict as a successful response with existing file data
     if (response.status === 409) {
-        console.log("409 response received:", response.data);
         return response.data;
     }
 
-    console.log("Normal upload response:", response.data);
     return response.data
 }
 

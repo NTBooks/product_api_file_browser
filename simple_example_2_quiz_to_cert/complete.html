@@ -164,7 +164,7 @@
             <p><strong>Collection:</strong> Course Complete</p>
             <p><strong>Network:</strong> <span id="network">Loading...</span></p>
 
-            <div id="certificateImage" style="margin-top: 20px; display: none;">
+            <div id="certificatePreview" style="margin-top: 20px; display: none;">
                 <h4>Certificate Preview</h4>
                 <img id="certImage" class="certificate-preview" alt="Your Certificate"
                     style="max-width: 100%; height: auto;">
@@ -180,6 +180,14 @@
                 <div class="loading">Loading file status...</div>
             </div>
             <button id="refreshBtn" onclick="checkFileStatus()">🔄 Refresh Status</button>
+        </div>
+
+        <div class="certificate-display">
+            <h3>📜 Certificate Image</h3>
+            <div id="certificateImageContainer">
+                <img id="certificateImage" alt="Certificate"
+                    style="max-width: 100%; height: auto; border: 1px solid #dee2e6; border-radius: 8px;">
+            </div>
         </div>
 
         <div style="margin-top: 30px;">
@@ -215,52 +223,81 @@
             statusContent.innerHTML = '<div class="loading">Checking file status...</div>';
 
             try {
-                const response = await fetch(`/api/file-status/${hash}`);
-                const result = await response.json();
+                // First, get file info from group (includes gatewayurl)
+                const groupResponse = await fetch(`/api/file-info/${hash}`);
 
-                if (result.success && result.data) {
-                    const fileData = result.data;
+                if (!groupResponse.ok) {
+                    throw new Error(`File info request failed: ${groupResponse.status} ${groupResponse.statusText}`);
+                }
 
-                    // Show certificate image if gateway URL is available
-                    if (fileData.gatewayurl) {
-                        const certImage = document.getElementById('certImage');
-                        const certImageDiv = document.getElementById('certificateImage');
-                        certImage.src = fileData.gatewayurl;
-                        certImage.onload = () => {
-                            certImageDiv.style.display = 'block';
-                        };
-                        certImage.onerror = () => {
-                            console.log('Failed to load certificate image from gateway');
-                        };
+                const groupResult = await groupResponse.json();
+
+                // Then, get blockchain transaction details
+                const blockchainResponse = await fetch(`/api/file-status/${hash}`);
+
+                if (!blockchainResponse.ok) {
+                    throw new Error(`Blockchain request failed: ${blockchainResponse.status} ${blockchainResponse.statusText}`);
+                }
+
+                const blockchainResult = await blockchainResponse.json();
+
+                if (groupResult.success && groupResult.data) {
+                    const fileData = groupResult.data;
+
+                    // Set certificate image src
+                    const certImage = document.getElementById('certificateImage');
+
+                    // Use gateway URL from file data or construct from hash
+                    let gatewayUrl = fileData.gatewayurl;
+
+                    if (!gatewayUrl && fileData.hash) {
+                        gatewayUrl = `https://ipfs.io/ipfs/${fileData.hash}`;
                     }
 
-                    statusContent.innerHTML = `
+                    if (gatewayUrl) {
+                        // Use Pinata gateway instead of the original gateway URL
+                        const pinataUrl = `https://gateway.pinata.cloud/ipfs/${fileData.hash}`;
+                        certImage.src = pinataUrl;
+                    }
+
+                    // Build status display with both group info and blockchain info
+                    let statusHTML = `
                         <div class="status-item">
                             <span class="status-label">File Hash:</span>
                             <span class="status-value hash-display">${fileData.hash || hash}</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">File Name:</span>
-                            <span class="status-value">${fileData.name || 'cert.jpg'}</span>
+                            <span class="status-value">${fileData.name || 'cert.png'}</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">File Size:</span>
                             <span class="status-value">${fileData.size ? (fileData.size / 1024).toFixed(2) + ' KB' : 'Unknown'}</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Upload Date:</span>
-                            <span class="status-value">${fileData.upload_date || 'Unknown'}</span>
+                            <span class="status-label">Created:</span>
+                            <span class="status-value">${fileData.created_at ? new Date(fileData.created_at).toLocaleString() : 'Unknown'}</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Stamped:</span>
-                            <span class="status-value ${fileData.stamped ? 'stamped' : 'pending'}">
-                                ${fileData.stamped ? '✅ Yes' : '⏳ Pending'}
+                            <span class="status-value ${fileData.is_stamped ? 'stamped' : 'pending'}">
+                                ${fileData.is_stamped ? '✅ Yes' : '⏳ Pending'}
                             </span>
                         </div>
-                        ${fileData.transaction_id ? `
                         <div class="status-item">
                             <span class="status-label">Transaction ID:</span>
-                            <span class="status-value hash-display">${fileData.transaction_id}</span>
+                            <span class="status-value hash-display">${blockchainResult.success && blockchainResult.data && blockchainResult.data.data && blockchainResult.data.data.foreign_tx_id ? blockchainResult.data.data.foreign_tx_id : 'Not available'}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Contract Address:</span>
+                            <span class="status-value hash-display">${blockchainResult.success && blockchainResult.data && blockchainResult.data.data && blockchainResult.data.data.contract ? blockchainResult.data.data.contract : 'Not available'}</span>
+                        </div>
+                        ${blockchainResult.success && blockchainResult.data && blockchainResult.data.data && blockchainResult.data.data.claim_link ? `
+                        <div class="status-item">
+                            <span class="status-label">Claim Link:</span>
+                            <span class="status-value">
+                                <a href="${blockchainResult.data.data.claim_link}" target="_blank" style="color: #007bff;">Claim Certificate</a>
+                            </span>
                         </div>
                         ` : ''}
                         ${fileData.gatewayurl ? `
@@ -272,11 +309,26 @@
                         </div>
                         ` : ''}
                     `;
+
+                    // Add blockchain transaction details if available
+                    if (blockchainResult.success && blockchainResult.data && blockchainResult.data.data) {
+                        const blockchainData = blockchainResult.data.data;
+                        statusHTML += `
+                            ${blockchainData.created ? `
+                            <div class="status-item">
+                                <span class="status-label">Stamped Date:</span>
+                                <span class="status-value">${new Date(blockchainData.created * 1000).toLocaleString()}</span>
+                            </div>
+                            ` : ''}
+                        `;
+                    }
+
+                    statusContent.innerHTML = statusHTML;
                 } else {
                     statusContent.innerHTML = `
                         <div class="error">
                             <h4>Status Check Failed</h4>
-                            <p>${result.message || 'Unable to retrieve file status'}</p>
+                            <p>${groupResult.message || 'Unable to retrieve file status'}</p>
                         </div>
                     `;
                 }
@@ -285,7 +337,8 @@
                 statusContent.innerHTML = `
                     <div class="error">
                         <h4>Error</h4>
-                        <p>Failed to check file status. Please try again.</p>
+                        <p>Failed to check file status: ${error.message}</p>
+                        <p>Please try again or check the browser console for more details.</p>
                     </div>
                 `;
             } finally {
@@ -298,9 +351,17 @@
         function downloadCertificate() {
             const hash = getFileHash();
             if (hash) {
-                // This would typically download the certificate file
-                // For now, we'll just show a message
-                alert('Certificate download feature would be implemented here.\nFile Hash: ' + hash);
+                // Create a download link for the certificate image
+                const downloadUrl = `https://gateway.pinata.cloud/ipfs/${hash}`;
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = 'certificate.png';
+                link.target = '_blank';
+
+                // Trigger the download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             } else {
                 alert('No certificate hash available for download.');
             }

@@ -135,7 +135,6 @@ export const useJsonContent = (fileInfo) => {
             // Use proxy URL to avoid CORS issues
             const encodedUrl = encodeURIComponent(fileInfo.gatewayurl);
             const proxyUrl = `${import.meta.env.VITE_DEMO_SERVER || 'http://localhost:3041'}/ipfs?url=${encodedUrl}`;
-            console.log('Fetching JSON content via proxy:', proxyUrl);
             const response = await fetch(proxyUrl);
 
             if (!response.ok) {
@@ -143,11 +142,9 @@ export const useJsonContent = (fileInfo) => {
             }
 
             const text = await response.text();
-            console.log('JSON response received, length:', text.length);
 
             // Parse the JSON and return it
             const parsed = JSON.parse(text);
-            console.log('JSON parsed successfully');
             return parsed;
         },
         enabled: !!fileInfo?.gatewayurl && isJsonFile(fileInfo.name),
@@ -170,7 +167,6 @@ export const useTextContent = (fileInfo) => {
             // Use proxy URL to avoid CORS issues
             const encodedUrl = encodeURIComponent(fileInfo.gatewayurl);
             const proxyUrl = `${import.meta.env.VITE_DEMO_SERVER || 'http://localhost:3041'}/ipfs?url=${encodedUrl}`;
-            console.log('Fetching text content via proxy:', proxyUrl);
             const response = await fetch(proxyUrl);
 
             if (!response.ok) {
@@ -178,7 +174,6 @@ export const useTextContent = (fileInfo) => {
             }
 
             const text = await response.text();
-            console.log('Text response received, length:', text.length);
 
             return text;
         },

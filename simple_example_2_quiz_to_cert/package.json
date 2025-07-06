@@ -8,10 +8,11 @@
         "dev": "node server.js"
     },
     "dependencies": {
-        "express": "^4.18.2",
-        "sharp": "^0.32.6",
+        "axios": "^1.10.0",
         "dotenv": "^16.3.1",
-        "form-data": "^4.0.0"
+        "express": "^4.18.2",
+        "form-data": "^4.0.0",
+        "sharp": "^0.32.6"
     },
     "keywords": [
         "quiz",
