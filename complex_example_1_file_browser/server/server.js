@@ -143,14 +143,14 @@ app.post('/api/credentials', (req, res) => {
     res.json({ success: true, message: 'Credentials saved successfully' });
 });
 
-// GET /api/credentials - Get current credentials info (for UI display)
+// GET /api/credentials - Get current credentials info
 app.get('/api/credentials', (req, res) => {
     try {
         const credentials = getCredentialsFromSession(req);
 
         if (hasHardcodedCredentials()) {
             // Return info about hardcoded credentials
-            res.json({
+            return res.json({
                 success: true,
                 data: {
                     apikey: process.env.API_KEY.substring(0, 8) + '...',
@@ -158,17 +158,17 @@ app.get('/api/credentials', (req, res) => {
                     source: 'environment'
                 }
             });
-        } else {
-            // Return info about session credentials
-            res.json({
-                success: true,
-                data: {
-                    apikey: credentials.apikey.substring(0, 8) + '...',
-                    network: credentials.network,
-                    source: 'session'
-                }
-            });
         }
+
+        // Return info about session credentials
+        res.json({
+            success: true,
+            data: {
+                apikey: credentials.apikey.substring(0, 8) + '...',
+                network: credentials.network,
+                source: 'session'
+            }
+        });
     } catch (error) {
         res.status(404).json({ success: false, message: 'No credentials found' });
     }
@@ -225,16 +225,15 @@ app.get('/api/groups', requireCredentials, async (req, res) => {
             'network': network
         });
 
-        if (result.success) {
-            console.log('Groups API response:', result.data); // Debug log
-            res.json(result.data);
-        } else {
+        if (!result.success) {
             if (result.status === 401 || result.status === 403) {
-                handleApiError({ response: { status: result.status } }, req, res);
-            } else {
-                res.status(result.status || 500).json(result.error);
+                return handleApiError({ response: { status: result.status } }, req, res);
             }
+            return res.status(result.status || 500).json(result.error);
         }
+
+        console.log('Groups API response:', result.data); // Debug log
+        res.json(result.data);
     } catch (error) {
         handleApiError(error, req, res);
     }
@@ -256,16 +255,15 @@ app.get('/api/files', requireCredentials, async (req, res) => {
             'network': network
         });
 
-        if (result.success) {
-            console.log('Files API response:', result.data); // Debug log
-            res.json(result.data);
-        } else {
+        if (!result.success) {
             if (result.status === 401 || result.status === 403) {
-                handleApiError({ response: { status: result.status } }, req, res);
-            } else {
-                res.status(result.status || 500).json(result.error);
+                return handleApiError({ response: { status: result.status } }, req, res);
             }
+            return res.status(result.status || 500).json(result.error);
         }
+
+        console.log('Files API response:', result.data); // Debug log
+        res.json(result.data);
     } catch (error) {
         handleApiError(error, req, res);
     }
@@ -287,16 +285,15 @@ app.get('/api/file/:hash', requireCredentials, async (req, res) => {
             'network': network
         });
 
-        if (result.success) {
-            console.log('File detail API response:', result.data); // Debug log
-            res.json(result.data);
-        } else {
+        if (!result.success) {
             if (result.status === 401 || result.status === 403) {
-                handleApiError({ response: { status: result.status } }, req, res);
-            } else {
-                res.status(result.status || 500).json(result.error);
+                return handleApiError({ response: { status: result.status } }, req, res);
             }
+            return res.status(result.status || 500).json(result.error);
         }
+
+        console.log('File detail API response:', result.data); // Debug log
+        res.json(result.data);
     } catch (error) {
         handleApiError(error, req, res);
     }
@@ -385,15 +382,14 @@ app.delete('/api/file', requireCredentials, async (req, res) => {
             file_hash: fileHash
         });
 
-        if (result.success) {
-            res.json(result.data);
-        } else {
+        if (!result.success) {
             if (result.status === 401 || result.status === 403) {
-                handleApiError({ response: { status: result.status } }, req, res);
-            } else {
-                res.status(result.status || 500).json(result.error);
+                return handleApiError({ response: { status: result.status } }, req, res);
             }
+            return res.status(result.status || 500).json(result.error);
         }
+
+        res.json(result.data);
     } catch (error) {
         handleApiError(error, req, res);
     }
@@ -421,15 +417,14 @@ app.patch('/api/stamp', requireCredentials, async (req, res) => {
             'network': targetNetwork
         });
 
-        if (result.success) {
-            res.json(result.data);
-        } else {
+        if (!result.success) {
             if (result.status === 401 || result.status === 403) {
-                handleApiError({ response: { status: result.status } }, req, res);
-            } else {
-                res.status(result.status || 500).json(result.error);
+                return handleApiError({ response: { status: result.status } }, req, res);
             }
+            return res.status(result.status || 500).json(result.error);
         }
+
+        res.json(result.data);
     } catch (error) {
         handleApiError(error, req, res);
     }

@@ -171,27 +171,18 @@ app.post('/api/submit-quiz', async (req, res) => {
 
         let fileHash = 'unknown';
 
-        try {
-            const response = await axios.post(`${API_BASE_URL}/webhook/${API_KEY}`, formData, {
-                headers: {
-                    'secret-key': API_SECRET,
-                    'group-id': collectionName,
-                    'network': API_NETWORK,
-                    ...formData.getHeaders() // Include FormData headers
-                }
-            });
+        const response = await axios.post(`${API_BASE_URL}/webhook/${API_KEY}`, formData, {
+            headers: {
+                'secret-key': API_SECRET,
+                'group-id': collectionName,
+                'network': API_NETWORK,
+                ...formData.getHeaders() // Include FormData headers
+            }
+        });
 
-            console.log('Upload response status:', response.status);
-            console.log('Upload successful:', response.data);
-            fileHash = response.data?.hash || 'unknown';
-        } catch (error) {
-            console.error('Failed to upload certificate:', error.response?.data || error.message);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to upload certificate',
-                error: error.response?.data || error.message
-            });
-        }
+        console.log('Upload response status:', response.status);
+        console.log('Upload successful:', response.data);
+        fileHash = response.data?.hash || 'unknown';
 
         // Stamp the collection after uploading the certificate
         try {
@@ -210,7 +201,7 @@ app.post('/api/submit-quiz', async (req, res) => {
                 console.error('Failed to stamp collection:', stampResponse.status);
             }
         } catch (error) {
-            console.error('Failed to stamp collection:', error.response?.data || error.message);
+            console.error('Failed to stamp collection:', error.message);
         }
 
         res.json({
@@ -223,10 +214,11 @@ app.post('/api/submit-quiz', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Quiz submission error:', error);
+        console.error('Quiz submission error:', error.message);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: 'Failed to process quiz submission',
+            error: error.message
         });
     }
 });
@@ -244,62 +236,54 @@ app.get('/api/file-info/:hash', async (req, res) => {
         }
 
         // Get file info from group (includes gatewayurl)
-        try {
-            const response = await axios.get(`${API_BASE_URL}/webhook/${API_KEY}`, {
-                headers: {
-                    'secret-key': API_SECRET,
-                    'network': API_NETWORK,
-                    'group-id': 'Cert Demo'
-                }
-            });
-
-            if (response.status === 200) {
-                const data = response.data;
-
-                if (data.files) {
-                    // Find the specific file by hash
-                    const targetFile = data.files.find(file => file.hash === hash);
-
-                    if (targetFile) {
-                        res.json({
-                            success: true,
-                            data: targetFile
-                        });
-                    } else {
-                        res.status(404).json({
-                            success: false,
-                            message: 'File not found in collection',
-                            error: 'File hash not found in Cert Demo collection'
-                        });
-                    }
-                } else {
-                    res.status(500).json({
-                        success: false,
-                        message: 'Invalid response format',
-                        error: 'No files array in response'
-                    });
-                }
-            } else {
-                res.status(response.status).json({
-                    success: false,
-                    message: 'Failed to get collection files',
-                    error: `HTTP ${response.status}`
-                });
+        const response = await axios.get(`${API_BASE_URL}/webhook/${API_KEY}`, {
+            headers: {
+                'secret-key': API_SECRET,
+                'network': API_NETWORK,
+                'group-id': 'Cert Demo'
             }
-        } catch (error) {
-            console.error('File info check error:', error.response?.data || error.message);
-            res.status(500).json({
+        });
+
+        if (response.status !== 200) {
+            return res.status(response.status).json({
                 success: false,
-                message: 'Failed to get file info',
-                error: error.response?.data || error.message
+                message: 'Failed to get collection files',
+                error: `HTTP ${response.status}`
             });
         }
 
+        const data = response.data;
+
+        if (!data.files) {
+            return res.status(500).json({
+                success: false,
+                message: 'Invalid response format',
+                error: 'No files array in response'
+            });
+        }
+
+        // Find the specific file by hash
+        const targetFile = data.files.find(file => file.hash === hash);
+
+        if (!targetFile) {
+            return res.status(404).json({
+                success: false,
+                message: 'File not found in collection',
+                error: 'File hash not found in Cert Demo collection'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: targetFile
+        });
+
     } catch (error) {
-        console.error('File info check error:', error);
+        console.error('File info check error:', error.message);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: 'Failed to get file info',
+            error: error.message
         });
     }
 });
@@ -317,72 +301,41 @@ app.get('/api/file-status/:hash', async (req, res) => {
         }
 
         // Get specific file status with blockchain info and export links
-        try {
-            const response = await axios.get(`${API_BASE_URL}/webhook/${API_KEY}`, {
-                headers: {
-                    'secret-key': API_SECRET,
-                    'network': API_NETWORK,
-                    'hash': hash,
-                    'export-links': 'true'
-                }
+        const response = await axios.get(`${API_BASE_URL}/webhook/${API_KEY}`, {
+            headers: {
+                'secret-key': API_SECRET,
+                'network': API_NETWORK,
+                'hash': hash,
+                'group-id': 'Cert Demo',
+                'export-links': 'true'
+            }
+        });
+
+        if (response.status !== 200) {
+            return res.status(response.status).json({
+                success: false,
+                message: 'Failed to get file status',
+                error: `HTTP ${response.status}`
             });
-
-            if (response.status === 200) {
-                res.json({
-                    success: true,
-                    data: response.data
-                });
-            } else {
-                res.status(response.status).json({
-                    success: false,
-                    message: 'Failed to get file status',
-                    error: `HTTP ${response.status}`
-                });
-            }
-        } catch (error) {
-            // If export-links fails, try without it
-            console.log('Export-links request failed, trying without export-links...');
-            try {
-                const fallbackResponse = await axios.get(`${API_BASE_URL}/webhook/${API_KEY}`, {
-                    headers: {
-                        'secret-key': API_SECRET,
-                        'network': API_NETWORK,
-                        'hash': hash
-                    }
-                });
-
-                if (fallbackResponse.status === 200) {
-                    // Add null claim_link to indicate export-links failed
-                    const data = fallbackResponse.data;
-                    if (data && data.data) {
-                        data.data.claim_link = null;
-                    }
-                    res.json({
-                        success: true,
-                        data: data
-                    });
-                } else {
-                    res.status(fallbackResponse.status).json({
-                        success: false,
-                        message: 'Failed to get file status',
-                        error: `HTTP ${fallbackResponse.status}`
-                    });
-                }
-            } catch (fallbackError) {
-                console.error('File status check error:', fallbackError.response?.data || fallbackError.message);
-                res.status(500).json({
-                    success: false,
-                    message: 'Failed to get file status',
-                    error: fallbackError.response?.data || fallbackError.message
-                });
-            }
         }
 
+        const data = response.data;
+        // If this was a fallback response, add null claim_link to indicate export-links failed
+        if (data && data.data && !response.config.headers['export-links']) {
+            data.data.claim_link = null;
+        }
+
+        res.json({
+            success: true,
+            data: data
+        });
+
     } catch (error) {
-        console.error('File status check error:', error);
+        console.error('File status check error:', error.message);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: 'Failed to get file status',
+            error: error.message
         });
     }
 });
@@ -443,7 +396,7 @@ app.get('/ipfs', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Quiz Certificate Demo running on port ${PORT}`);
+    console.log(`Quiz Certificate Demo running on port http://localhost:${PORT}`);
     console.log(`API Key: ${API_KEY ? 'Configured' : 'Missing'}`);
     console.log(`API Secret: ${API_SECRET ? 'Configured' : 'Missing'}`);
     console.log(`Network: ${API_NETWORK}`);

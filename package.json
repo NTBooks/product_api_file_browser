@@ -1,18 +1,22 @@
 {
     "name": "product-api-file-browser",
-    "version": "1.0.0",
-    "description": "Modern file browser with React frontend and Express backend",
+    "version": "0.0.1",
+    "description": "Demos for the Chainletter Credential Product API",
     "main": "index.js",
     "scripts": {
         "dev": "concurrently \"npm run server\" \"npm run client\"",
         "server": "npm --prefix complex_example_1_file_browser/server run dev",
         "client": "cd complex_example_1_file_browser && npm run dev",
         "build": "cd complex_example_1_file_browser && npm run build",
-        "install-all": "npm install && cd complex_example_1_file_browser && npm install && cd server && npm install && cd ../simple_example_4_events && npm install",
+        "install-all": "npm install && cd complex_example_1_file_browser && npm install && cd server && npm install && cd ../simple_example_2_quiz_to_cert && npm install && cd ../simplest_example_3_upload_and_stamp && npm install && cd ../simple_example_4_events && npm install && cd ../simple_example_5_cost_savings_schedule && npm install && cd ../simple_example_6_local_hash && npm install && cd ../simple_example_7_create_clstamp_file && npm install && cd ../complex_example_8_upload_and_clstamp && npm install",
         "ex1": "concurrently \"npm run server\" \"npm run client\"",
         "ex2": "cd simple_example_2_quiz_to_cert && npm start",
         "ex3": "cd simplest_example_3_upload_and_stamp && npm start",
-        "ex4": "cd simple_example_4_events && npm start"
+        "ex4": "cd simple_example_4_events && npm start",
+        "ex5": "cd simple_example_5_cost_savings_schedule && npm start",
+        "ex6": "cd simple_example_6_local_hash && npm start",
+        "ex7": "cd simple_example_7_create_clstamp_file && npm start",
+        "ex8": "cd complex_example_8_upload_and_clstamp && npm start"
     },
     "keywords": [
         "file-browser",

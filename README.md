@@ -153,6 +153,38 @@ npm run client
 npm run server
 ```
 
+### Running Individual Examples
+
+This repository contains multiple examples demonstrating different aspects of the API. You can run each example individually:
+
+```bash
+# Example 1: Full React file browser with Material UI
+npm run ex1
+
+# Example 2: Quiz to certificate generation
+npm run ex2
+
+# Example 3: Simple upload and stamp
+npm run ex3
+
+# Example 4: Event-driven file processing
+npm run ex4
+
+# Example 5: Cost-saving scheduled stamping
+npm run ex5
+
+# Example 6: Local file hashing
+npm run ex6
+
+# Example 7: CLStamp file creation
+npm run ex7
+
+# Example 8: Upload with CLStamp creation
+npm run ex8
+```
+
+Each example runs on its own port and demonstrates different use cases and complexity levels.
+
 ## Configuration
 
 1. **Open the application** in your browser at `http://localhost:3000`
@@ -261,6 +293,16 @@ npm run client
 
 # Start only server
 npm run server
+
+# Run individual examples
+npm run ex1  # React file browser
+npm run ex2  # Quiz to certificate
+npm run ex3  # Simple upload and stamp
+npm run ex4  # Event-driven processing
+npm run ex5  # Scheduled stamping
+npm run ex6  # Local hashing
+npm run ex7  # CLStamp creation
+npm run ex8  # Upload with CLStamp
 ```
 
 ### File Structure Details
