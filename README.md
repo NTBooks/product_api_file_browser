@@ -1,67 +1,46 @@
-# File Browser Application
+# Chainletter Product API Learning Repository
 
-A modern file browser application built with React, Material UI, and Express.js that provides a comprehensive interface for managing files and groups through the Chainletter Credential Server Webhook API.
+A comprehensive collection of examples demonstrating how to integrate with the Chainletter Product API. This repository contains examples ranging from simple client-side utilities to complex full-stack applications, designed to help you understand and implement blockchain file storage and verification.
 
-## Features
+## 🎯 What is Chainletter?
 
-- **Dashboard**: View account statistics and configure API credentials
-- **Groups View**: Browse all available groups in a grid layout with folder icons
-- **Files View**: Display files within a group with image previews and file management
-- **File Detail View**: Detailed file information with preview images and verification data
-- **File Upload**: Upload files to specific groups
-- **File Deletion**: Delete unstamped files
-- **Collection Stamping**: Stamp entire collections of files
-- **Modern UI**: Beautiful Material UI design with responsive layout
-- **Secure Credential Management**: Server-side session storage with automatic cleanup
-- **Environment Variable Support**: Hardcoded credentials for deployment scenarios
-- **Advanced Data Management**: React Query for efficient data fetching, caching, and state management
-- **Performance Optimizations**: Lazy loading for images with intersection observer
-- **Real-time Updates**: Automatic cache invalidation and background refetching
+Chainletter provides a webhook-based API for uploading files to IPFS (InterPlanetary File System) and creating blockchain timestamps. This enables:
 
-## Security Features
+- **Decentralized File Storage**: Files are stored on IPFS, a distributed file system
+- **Blockchain Verification**: Create immutable timestamps on the blockchain
+- **Cost-Effective Stamping**: Batch operations to minimize blockchain transaction costs
+- **Real-time Events**: Webhook streams for monitoring file and collection status
 
-### Credential Management
+## 📚 Learning Path
 
-- **Server-side Sessions**: API credentials are stored securely on the server, not in browser localStorage
-- **Automatic Cleanup**: Invalid credentials are automatically cleared when authentication fails
-- **Environment Variables**: Support for hardcoded credentials in deployment environments
-- **Session Validation**: Middleware ensures credentials are available for all protected routes
+This repository is organized by complexity, from simple utilities to full applications:
 
-### Authentication Error Handling
+### 🔧 **Client-Side Utilities** (No Server Required)
 
-- **401/403 Detection**: Automatically detects and handles authentication failures
-- **Session Clearing**: Invalid sessions are cleared when API returns authentication errors
-- **User Feedback**: Clear error messages guide users to reconfigure credentials
+- **Example 6**: [Local IPFS Hash Calculator](simple_example_6_local_hash/) - Calculate IPFS CIDs locally
+- **Example 7**: [CLStamp File Creator](simple_example_7_create_clstamp_file/) - Create verification files locally
 
-## Project Structure
+### 🚀 **Simple API Examples** (Single File)
 
-```
-product_api_file_browser/
-├── complex_example_1_file_browser/  # React frontend
-│   ├── src/
-│   │   ├── pages/         # React page components
-│   │   ├── services/      # API service functions
-│   │   ├── hooks/         # Custom React hooks (React Query, lazy loading)
-│   │   ├── components/    # Reusable components (LazyImage)
-│   │   ├── utils/         # Utility functions
-│   │   ├── App.jsx        # Main app component with React Query setup
-│   │   └── main.jsx       # React entry point
-│   ├── package.json       # Frontend dependencies
-│   └── vite.config.js     # Vite configuration
-├── server/                # Express backend
-│   ├── server.js          # Express server with API routes and session management
-│   ├── package.json       # Backend dependencies
-│   └── env.example        # Environment variables template
-├── package.json           # Root package.json with concurrent scripts
-└── README.md             # This file
-```
+- **Example 3**: [Minimal Upload & Stamp](simplest_example_3_upload_and_stamp/) - The simplest possible API integration
+- **Example 2**: [Quiz to Certificate](simple_example_2_quiz_to_cert/) - Generate and upload certificates
+- **Example 4**: [Event Listener](simple_example_4_events/) - Real-time webhook event monitoring
+- **Example 5**: [Cost-Saving Scheduler](simple_example_5_cost_savings_schedule/) - Batch processing for cost optimization
 
-## Prerequisites
+### 🏗️ **Complex Applications** (Full-Stack)
+
+- **Example 1**: [React File Browser](complex_example_1_file_browser/) - Complete file management interface
+- **Example 8**: [Upload with CLStamp](complex_example_8_upload_and_clstamp/) - Advanced file processing with verification
+
+## 🚀 Quick Start
+
+### Prerequisites
 
 - Node.js (v16 or higher)
 - npm or yarn
+- Chainletter API credentials (get them from [chainletter.io](https://chainletter.io))
 
-## Installation
+### Installation
 
 1. **Clone the repository**:
 
@@ -70,307 +49,213 @@ product_api_file_browser/
    cd product_api_file_browser
    ```
 
-2. **Install all dependencies**:
+2. **Install dependencies**:
 
    ```bash
    npm run install-all
    ```
 
-   This will install dependencies for:
-
-   - Root project (concurrently for running both servers)
-   - Client (React, Material UI, React Query, etc.)
-   - Server (Express, express-session, etc.)
-
-3. **Configure environment variables** (optional):
+3. **Configure API credentials**:
    ```bash
-   cd server
    cp env.example .env
-   # Edit .env with your configuration
+   # Edit .env with your API credentials
    ```
 
-## Environment Configuration
+## 📖 Example Overview
 
-### For Development
+### Client-Side Examples (Open in Browser)
 
-Create a `.env` file in the `server/` directory:
+#### Example 6: Local IPFS Hash Calculator
 
-```env
-# Session configuration
-SESSION_SECRET=your-super-secret-session-key-change-in-production
+**Purpose**: Learn how to calculate IPFS CIDs locally without uploading
 
-# Optional: Hardcoded API credentials for deployment
-# Uncomment and set these if you want to hardcode credentials
-# API_KEY=your-api-key-here
-# API_SECRET=your-api-secret-here
-# Note: API_NETWORK removed - client now controls network explicitly
+- **Run**: Open `simple_example_6_local_hash/index.html` in your browser
+- **Learn**: IPFS hash calculation, client-side file processing
+- **Use Case**: Verify file integrity, prepare files for upload
 
-# Server configuration
-PORT=3001
-```
+#### Example 7: CLStamp File Creator
 
-### For Production Deployment
+**Purpose**: Create verification files that can be shared independently
 
-Set environment variables for hardcoded credentials:
+- **Run**: Open `simple_example_7_create_clstamp_file/index.html` in your browser
+- **Learn**: File packaging, hash verification, downloadable stamps
+- **Use Case**: Create portable verification files, share proof of existence
 
-```env
-API_KEY=your-production-api-key
-API_SECRET=your-production-api-secret
-SESSION_SECRET=your-production-session-secret
-# Note: API_NETWORK removed - client now controls network explicitly
-```
+### Simple Server Examples
 
-When hardcoded credentials are set:
+#### Example 3: Minimal Upload & Stamp
 
-- Users cannot modify credentials via the UI
-- Credentials are automatically available without configuration
-- The UI shows "Environment Variables" as the credential source
+**Purpose**: The simplest possible API integration
 
-## Running the Application
+- **Run**: `npm run ex3`
+- **Learn**: Basic file upload, immediate stamping, API authentication
+- **Use Case**: Quick file timestamping, API testing
 
-### Development Mode
+#### Example 2: Quiz to Certificate
 
-Start both the client and server simultaneously:
+**Purpose**: Generate dynamic content and upload to blockchain
 
-```bash
-npm run dev
-```
+- **Run**: `npm run ex2`
+- **Learn**: Dynamic file generation, collection management, status monitoring
+- **Use Case**: Educational certificates, achievement badges, dynamic content
 
-This will start:
+#### Example 4: Event Listener
 
-- **Client**: http://localhost:3000 (React development server)
-- **Server**: http://localhost:3001 (Express API server)
+**Purpose**: Monitor real-time API events
 
-### Individual Commands
+- **Run**: `npm run ex4`
+- **Learn**: Webhook event streams, real-time monitoring, event handling
+- **Use Case**: Application monitoring, status tracking, automation triggers
 
-You can also run the client and server separately:
+#### Example 5: Cost-Saving Scheduler
 
-```bash
-# Start only the client
-npm run client
+**Purpose**: Optimize costs through batch processing
 
-# Start only the server
-npm run server
-```
+- **Run**: `npm run ex5`
+- **Learn**: Batch operations, scheduled processing, cost optimization
+- **Use Case**: High-volume applications, cost-sensitive deployments
 
-### Running Individual Examples
+### Complex Applications
 
-This repository contains multiple examples demonstrating different aspects of the API. You can run each example individually:
+#### Example 1: React File Browser
 
-```bash
-# Example 1: Full React file browser with Material UI
-npm run ex1
+**Purpose**: Complete file management interface with modern UI
 
-# Example 2: Quiz to certificate generation
-npm run ex2
+- **Run**: `npm run ex1`
+- **Learn**: Full-stack development, React integration, advanced UI patterns
+- **Use Case**: Production applications, user-facing interfaces
 
-# Example 3: Simple upload and stamp
-npm run ex3
+#### Example 8: Upload with CLStamp
 
-# Example 4: Event-driven file processing
-npm run ex4
+**Purpose**: Advanced file processing with verification
 
-# Example 5: Cost-saving scheduled stamping
-npm run ex5
+- **Run**: `npm run ex8`
+- **Learn**: Complex file workflows, verification systems, advanced packaging
+- **Use Case**: Document verification, legal applications, audit trails
 
-# Example 6: Local file hashing
-npm run ex6
+## 🔑 API Concepts
 
-# Example 7: CLStamp file creation
-npm run ex7
+### Core Operations
 
-# Example 8: Upload with CLStamp creation
-npm run ex8
-```
+1. **File Upload** (`POST /webhook/{apikey}`)
 
-Each example runs on its own port and demonstrates different use cases and complexity levels.
+   - Upload files to IPFS
+   - Organize into collections
+   - Optional immediate stamping
 
-## Configuration
+2. **Collection Stamping** (`PATCH /webhook/{apikey}`)
 
-1. **Open the application** in your browser at `http://localhost:3000`
+   - Create blockchain timestamps
+   - Batch multiple files
+   - Cost-effective verification
 
-2. **Configure API credentials** (if not using environment variables):
+3. **File Retrieval** (`GET /webhook/{apikey}`)
 
-   - API Key: Your webhook API key
-   - Secret Key: Your webhook secret key
-   - Network: Choose between public or private (client controls network for each operation)
+   - List files and collections
+   - Get file metadata
+   - Retrieve verification data
 
-3. **Save the configuration** to start using the application
+4. **File Deletion** (`DELETE /webhook/{apikey}`)
+   - Remove files from collections
+   - Clean up unused files
 
-## Usage
+### Event Streams
 
-### Dashboard
+Monitor real-time events:
 
-- View account statistics (total files, stamped files, credits, etc.)
-- Configure API credentials (if not hardcoded)
-- Monitor system status
-- See credential source (Session Storage or Environment Variables)
+- `file.uploaded` - File uploaded to IPFS
+- `file.pinned` - File pinned and ready
+- `collection.stamped` - Collection timestamped on blockchain
+- `file.deleted` - File removed
 
-### Groups
+## 💡 Best Practices
 
-- Browse all available groups in a grid view
-- Click on any group to view its files
-- Each group shows creation date, user ID, and network type
-- Create new groups with specified network type
+### Cost Optimization
 
-### Files
+- **Batch Operations**: Stamp collections instead of individual files
+- **Scheduled Processing**: Use timers for non-urgent files
+- **Smart Caching**: Cache file hashes and metadata
 
-- View all files in a selected group
-- Upload new files using the upload button
-- Stamp entire collections using the "Stamp Collection" button
-- Click on any file to view detailed information
-- Image files (jpg, jpeg, png) show previews
+### Security
 
-### File Details
+- **Environment Variables**: Store API credentials securely
+- **Server-Side Processing**: Handle sensitive operations on backend
+- **Input Validation**: Validate all user inputs
 
-- View comprehensive file information
-- See file verification data and blockchain details
-- Download files directly
-- Delete unstamped files (stamped files cannot be deleted)
-- Copy hashes and transaction IDs to clipboard
+### Performance
 
-## API Integration
+- **Lazy Loading**: Load files on demand
+- **Progress Indicators**: Show upload and processing status
+- **Error Handling**: Graceful failure recovery
 
-The application integrates with the Chainletter Credential Server Webhook API and supports all major operations:
+## 🛠️ Development
 
-- **HEAD** `/webhook/{apikey}` - Get tenant stats
-- **GET** `/webhook/{apikey}` - List groups, files, or get file info
-- **POST** `/webhook/{apikey}` - Upload files
-- **DELETE** `/webhook/{apikey}` - Delete files
-- **PATCH** `/webhook/{apikey}` - Stamp collections
-
-## Security Implementation
-
-### Server-Side Security
-
-- **Session Management**: Uses express-session for secure credential storage
-- **Middleware Protection**: All API routes require valid credentials
-- **Error Handling**: Automatic session cleanup on authentication failures
-- **CORS Configuration**: Properly configured for development and production
-
-### Client-Side Security
-
-- **No Local Storage**: Credentials are never stored in browser localStorage
-- **Axios Interceptors**: Automatic handling of authentication errors
-- **Error Feedback**: Clear user guidance when credentials are invalid
-
-## Technologies Used
-
-### Frontend
-
-- **React 18** - UI framework
-- **Material UI 5** - Component library and styling
-- **React Router 6** - Client-side routing
-- **React Query (TanStack Query)** - Data fetching, caching, and state management
-- **Vite** - Build tool and development server
-- **Axios** - HTTP client with interceptors
-- **react-intersection-observer** - Lazy loading for images
-
-### Backend
-
-- **Express.js** - Web framework
-- **express-session** - Session management
-- **CORS** - Cross-origin resource sharing
-- **Multer** - File upload handling
-- **Axios** - HTTP client for API calls
-
-## Development
-
-### Project Scripts
+### Running Examples
 
 ```bash
 # Install all dependencies
 npm run install-all
 
-# Start development servers
-npm run dev
+# Run specific examples
+npm run ex1  # React file browser (Client: 3040, Server: 3041)
+npm run ex2  # Quiz to certificate (3042)
+npm run ex3  # Simple upload and stamp (3043)
+npm run ex4  # Event-driven processing (3044)
+npm run ex5  # Scheduled stamping (3045)
+# Examples 6 & 7: Open index.html directly in browser (client-side only)
+npm run ex8  # Upload with CLStamp (3048)
 
-# Build for production
-npm run build
-
-# Start only client
-npm run client
-
-# Start only server
-npm run server
-
-# Run individual examples
-npm run ex1  # React file browser
-npm run ex2  # Quiz to certificate
-npm run ex3  # Simple upload and stamp
-npm run ex4  # Event-driven processing
-npm run ex5  # Scheduled stamping
-npm run ex6  # Local hashing
-npm run ex7  # CLStamp creation
-npm run ex8  # Upload with CLStamp
+# Development mode
+npm run dev  # Start all examples simultaneously
 ```
 
-### File Structure Details
+### Environment Configuration
 
-#### Client (`/complex_example_1_file_browser`)
-
-- **Pages**: React components for each route (Dashboard, Groups, Files, FileDetail)
-- **Services**: API service functions with error handling and session management
-- **Hooks**: Custom React hooks for data fetching (React Query) and lazy loading
-- **Components**: Reusable components like LazyImage for optimized image loading
-- **Utils**: Utility functions for image handling and URL processing
-- **App.jsx**: Main application component with React Query setup and routing
-- **main.jsx**: React entry point with theme provider
-
-#### Server (`/server`)
-
-- **server.js**: Express server with middleware, session management, and API proxy routes
-- **API Routes**: Protected routes with credential validation and error handling
-- **Session Management**: Secure credential storage with automatic cleanup
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Port conflicts**: If ports 3000 or 3001 are in use, the application will fail to start
-2. **API credentials**: Make sure to configure valid API credentials in the dashboard
-3. **CORS issues**: The server is configured to allow all origins in development
-4. **Session errors**: Clear browser cookies if experiencing session issues
-
-### Error Messages
-
-- **"API credentials not found"**: Configure your API key and secret in the dashboard
-- **"Authentication failed"**: Check your credentials or clear session and reconfigure
-- **"Failed to fetch"**: Check your internet connection and API credentials
-- **"File not found"**: The requested file may not exist or you may not have access
-
-### Environment Variable Issues
-
-- **"Credentials are hardcoded"**: Cannot modify credentials when using environment variables
-- **"No credentials found"**: Check your .env file configuration
-
-## Deployment
-
-### Production Considerations
-
-1. **Environment Variables**: Use hardcoded credentials for production deployments
-2. **Session Secret**: Use a strong, unique session secret
-3. **HTTPS**: Enable secure cookies in production
-4. **CORS**: Configure proper CORS settings for your domain
-
-### Example Production .env
+Create a `.env` file with your API credentials:
 
 ```env
-SESSION_SECRET=your-super-secure-production-session-secret
-API_KEY=your-production-api-key
-API_SECRET=your-production-api-secret
-API_NETWORK=public
+# API credentials
+API_KEY=your-api-key-here
+API_SECRET=your-api-secret-here
+API_NETWORK=public  # or private
+
+# Server configuration
+SESSION_SECRET=your-session-secret
 PORT=3001
 ```
 
-## Contributing
+## 🔗 API Reference
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+### Base URL
 
-## License
+```
+https://api.chainletter.io
+```
 
-This project is licensed under the MIT License.
+### Authentication
+
+All requests require API key authentication via URL path parameter:
+
+```
+/webhook/{apikey}
+```
+
+### Rate Limits
+
+- File uploads: 10 per minute
+- Collection stamps: 5 per minute
+- API calls: 100 per minute
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+- **Documentation**: [chainletter.io/docs](https://chainletter.io/docs)
+- **API Reference**: [chainletter.io/api](https://chainletter.io/api)
+- **Community**: [Discord](https://discord.gg/chainletter)
+
+---
+
+**Ready to get started?** Begin with [Example 3](simplest_example_3_upload_and_stamp/) for the simplest integration, or jump to [Example 1](complex_example_1_file_browser/) for a complete application experience.

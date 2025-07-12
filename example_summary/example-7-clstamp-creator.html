@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.clstamp File Creator - Chainletter API Wiki</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #fd7e14;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .difficulty {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .back-link {
+            margin-bottom: 20px;
+        }
+
+        .back-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            border-left: 4px solid #fd7e14;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #fd7e14;
+            margin: 15px 0;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .tech-tag {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            color: #495057;
+        }
+
+        .file-structure {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="index.html">← Back to Examples Index</a>
+        </div>
+
+        <h1>📦 .clstamp File Creator</h1>
+        <span class="difficulty">Intermediate Level</span>
+
+        <div class="section">
+            <h2>Overview</h2>
+            <p>This example creates downloadable .zip.clstamp files containing the original file, IPFS hash, SHA-256
+                hash, and manifest for offline verification. It demonstrates how to package verification data with files
+                for distribution.</p>
+
+            <div class="highlight">
+                <h3>🎯 What This Example Teaches</h3>
+                <ul>
+                    <li><strong>File Packaging:</strong> How to create downloadable verification packages</li>
+                    <li><strong>JSZip Integration:</strong> Creating zip files in the browser</li>
+                    <li><strong>Hash Verification:</strong> Including multiple hash types for verification</li>
+                    <li><strong>File-Saver:</strong> Triggering file downloads from the browser</li>
+                    <li><strong>Offline Verification:</strong> Creating self-contained verification packages</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Technology Stack</h2>
+            <div class="tech-stack">
+                <span class="tech-tag">HTML/CSS/JS</span>
+                <span class="tech-tag">JSZip</span>
+                <span class="tech-tag">File-Saver</span>
+                <span class="tech-tag">IPFS-unixfs-importer</span>
+                <span class="tech-tag">Web Crypto API</span>
+                <span class="tech-tag">Hash Verification</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Generated File Structure</h2>
+            <div class="file-structure">
+                your-file.zip.clstamp/
+                ├── your-file.ext # Original uploaded file
+                ├── hash.txt # IPFS CID
+                ├── sha.txt # SHA-256 hash
+                └── manifest.txt # Original filename and metadata
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Core Implementation</h2>
+
+            <h3>📦 Creating the .clstamp Package</h3>
+            <div class="code-block">
+                async function createStampFile(file, ipfsHash, shaHash) {
+                const zip = new JSZip();
+
+                // Add original file
+                zip.file(file.name, file);
+
+                // Add IPFS hash
+                zip.file('hash.txt', ipfsHash);
+
+                // Add SHA-256 hash
+                zip.file('sha.txt', shaHash);
+
+                // Add manifest with metadata
+                const manifest = `Original Filename: ${file.name}
+                File Size: ${file.size} bytes
+                IPFS CID: ${ipfsHash}
+                SHA-256: ${shaHash}
+                Created: ${new Date().toISOString()}`;
+
+                zip.file('manifest.txt', manifest);
+
+                // Generate and download the zip file
+                const content = await zip.generateAsync({type: 'blob'});
+                saveAs(content, `${file.name}.clstamp`);
+                }
+            </div>
+
+            <h3>🔢 Hash Calculation</h3>
+            <div class="code-block">
+                async function calculateHashes(file) {
+                // Calculate IPFS CID
+                const ipfsHash = await calculateIPFSHash(file);
+
+                // Calculate SHA-256
+                const shaHash = await calculateSHA256(file);
+
+                // Create and download stamp file
+                await createStampFile(file, ipfsHash, shaHash);
+                }
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Key Features</h2>
+            <ul>
+                <li><strong>Complete Package:</strong> Includes original file and all verification data</li>
+                <li><strong>Multiple Hash Types:</strong> Both IPFS CID and SHA-256 for comprehensive verification</li>
+                <li><strong>Metadata Manifest:</strong> Contains file information and creation timestamp</li>
+                <li><strong>Automatic Download:</strong> Triggers download immediately after creation</li>
+                <li><strong>Standard Format:</strong> Uses .clstamp extension for easy identification</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Use Cases</h2>
+            <ul>
+                <li><strong>File Distribution:</strong> Share files with built-in verification</li>
+                <li><strong>Offline Verification:</strong> Verify files without internet connection</li>
+                <li><strong>Documentation:</strong> Include verification data with important documents</li>
+                <li><strong>Archival:</strong> Create self-contained verification packages</li>
+                <li><strong>Compliance:</strong> Meet requirements for file integrity verification</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Verification Process</h2>
+            <p>To verify a .clstamp file:</p>
+            <ol>
+                <li>Extract the .zip.clstamp file</li>
+                <li>Calculate the IPFS CID of the original file</li>
+                <li>Compare with the hash.txt contents</li>
+                <li>Calculate SHA-256 of the original file</li>
+                <li>Compare with the sha.txt contents</li>
+                <li>Check manifest.txt for additional metadata</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>Next Steps</h2>
+            <p>After understanding this example, you can explore:</p>
+            <ul>
+                <li><a href="example-8-upload-clstamp.html">Example 8</a> - Combining upload with stamp files</li>
+                <li><a href="example-1-file-browser.html">Example 1</a> - Advanced file management</li>
+                <li><a href="example-6-local-hash.html">Example 6</a> - Local hash calculation</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Running the Example</h2>
+            <p>This is a client-side application that runs entirely in the browser:</p>
+            <div class="code-block">
+                # No server required - just open in browser
+                open index.html
+            </div>
+
+            <div class="highlight">
+                <strong>Usage:</strong>
+                <ol>
+                    <li>Open the HTML file in a modern browser</li>
+                    <li>Select a file to process</li>
+                    <li>Wait for hash calculation and stamp file creation</li>
+                    <li>Download the .zip.clstamp file automatically</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

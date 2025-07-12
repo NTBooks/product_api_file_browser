@@ -6,7 +6,7 @@ const fetch = require('node-fetch');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.EX8_PORT || 3048;
 
 // Middleware
 app.use(express.json());

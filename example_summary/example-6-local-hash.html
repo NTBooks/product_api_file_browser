@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local IPFS Hash Calculator - Chainletter API Wiki</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #6f42c1;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .difficulty {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .back-link {
+            margin-bottom: 20px;
+        }
+
+        .back-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            border-left: 4px solid #6f42c1;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+            margin: 15px 0;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .tech-tag {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            color: #495057;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="index.html">← Back to Examples Index</a>
+        </div>
+
+        <h1>🔍 Local IPFS Hash Calculator</h1>
+        <span class="difficulty">Beginner Level</span>
+
+        <div class="section">
+            <h2>Overview</h2>
+            <p>This example demonstrates how to calculate IPFS CIDs and SHA-256 hashes for files entirely in the browser
+                without uploading them to IPFS. It's useful for verification, testing, and understanding how IPFS
+                hashing works.</p>
+
+            <div class="highlight">
+                <h3>🎯 What This Example Teaches</h3>
+                <ul>
+                    <li><strong>Client-side Hashing:</strong> How to calculate IPFS CIDs without server involvement</li>
+                    <li><strong>IPFS-unixfs-importer:</strong> Using the official IPFS library in the browser</li>
+                    <li><strong>Web Crypto API:</strong> Calculating SHA-256 hashes for verification</li>
+                    <li><strong>File API:</strong> Handling file uploads and processing in the browser</li>
+                    <li><strong>Offline Capabilities:</strong> Hash calculation without internet connection</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Technology Stack</h2>
+            <div class="tech-stack">
+                <span class="tech-tag">HTML/CSS/JS</span>
+                <span class="tech-tag">IPFS-unixfs-importer</span>
+                <span class="tech-tag">Web Crypto API</span>
+                <span class="tech-tag">File API</span>
+                <span class="tech-tag">Client-side</span>
+                <span class="tech-tag">Drag & Drop</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>How It Works</h2>
+            <ol>
+                <li><strong>File Selection:</strong> User selects a file via drag & drop or file picker</li>
+                <li><strong>IPFS CID Calculation:</strong> Uses ipfs-unixfs-importer to calculate the IPFS CID</li>
+                <li><strong>SHA-256 Calculation:</strong> Uses Web Crypto API to calculate SHA-256 hash</li>
+                <li><strong>Display Results:</strong> Shows both hashes for comparison and verification</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>Core Implementation</h2>
+
+            <h3>📁 File Handling</h3>
+            <div class="code-block">
+                // Handle file selection
+                const fileInput = document.getElementById('fileInput');
+                fileInput.addEventListener('change', async (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                await calculateHashes(file);
+                }
+                });
+
+                // Drag and drop support
+                uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                await calculateHashes(file);
+                }
+                });
+            </div>
+
+            <h3>🔢 IPFS CID Calculation</h3>
+            <div class="code-block">
+                async function calculateIPFSHash(file) {
+                const { importer } = await import('ipfs-unixfs-importer');
+
+                const chunks = [];
+                for await (const chunk of importer([file], {
+                cidVersion: 1,
+                hashAlg: 18 // sha256
+                })) {
+                chunks.push(chunk);
+                }
+
+                return chunks[0].cid.toString();
+                }
+            </div>
+
+            <h3>🔐 SHA-256 Calculation</h3>
+            <div class="code-block">
+                async function calculateSHA256(file) {
+                const buffer = await file.arrayBuffer();
+                const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                }
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Key Features</h2>
+            <ul>
+                <li><strong>Drag & Drop Interface:</strong> Modern file upload experience</li>
+                <li><strong>Real-time Calculation:</strong> Instant hash calculation as files are selected</li>
+                <li><strong>Dual Hash Support:</strong> Both IPFS CID and SHA-256 hashes</li>
+                <li><strong>File Information:</strong> Displays file name and size</li>
+                <li><strong>Loading States:</strong> Visual feedback during calculation</li>
+                <li><strong>Error Handling:</strong> Graceful handling of unsupported files</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Use Cases</h2>
+            <ul>
+                <li><strong>Verification:</strong> Verify file integrity before uploading</li>
+                <li><strong>Testing:</strong> Test hash calculations without API costs</li>
+                <li><strong>Education:</strong> Learn how IPFS hashing works</li>
+                <li><strong>Offline Work:</strong> Calculate hashes without internet connection</li>
+                <li><strong>Development:</strong> Debug hash-related issues</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Browser Compatibility</h2>
+            <p>This application works in modern browsers that support:</p>
+            <ul>
+                <li>ES6+ JavaScript</li>
+                <li>File API</li>
+                <li>Web Crypto API</li>
+                <li>Dynamic imports</li>
+                <li>Drag & Drop API</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Next Steps</h2>
+            <p>After understanding this example, you can explore:</p>
+            <ul>
+                <li><a href="example-7-clstamp-creator.html">Example 7</a> - Creating .clstamp files</li>
+                <li><a href="example-8-upload-clstamp.html">Example 8</a> - Combining upload with stamp files</li>
+                <li><a href="example-1-file-browser.html">Example 1</a> - Advanced file management</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Running the Example</h2>
+            <p>This is a client-side application that runs entirely in the browser. Simply open <code>index.html</code>
+                in a web browser:</p>
+            <div class="code-block">
+                # No server required - just open in browser
+                open index.html
+            </div>
+
+            <div class="highlight">
+                <strong>Usage:</strong>
+                <ol>
+                    <li>Open the HTML file in a modern browser</li>
+                    <li>Drag and drop a file or click to select</li>
+                    <li>View the calculated IPFS CID and SHA-256 hash</li>
+                    <li>Use these hashes for verification or testing</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

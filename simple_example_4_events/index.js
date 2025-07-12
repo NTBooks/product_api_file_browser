@@ -11,7 +11,7 @@ const API_BASE_URL = process.env.API_BASE_URL || 'https://api.chainletter.io';
 
 // Express app setup
 const app = express();
-const PORT = process.env.EXAMPLE_4_PORT || 3045;
+const PORT = process.env.EX4_PORT || 3044;
 
 // Middleware
 app.use(cors());

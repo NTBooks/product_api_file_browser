@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cost-Saving Scheduled Stamping - Chainletter API Wiki</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #28a745;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .difficulty {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .back-link {
+            margin-bottom: 20px;
+        }
+
+        .back-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            border-left: 4px solid #28a745;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+            margin: 15px 0;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .tech-tag {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            color: #495057;
+        }
+
+        .cost-comparison {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .cost-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .cost-table th,
+        .cost-table td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .cost-table th {
+            background: #e9ecef;
+            font-weight: bold;
+        }
+
+        .cost-table .highlight-row {
+            background: #d4edda;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="index.html">← Back to Examples Index</a>
+        </div>
+
+        <h1>💰 Cost-Saving Scheduled Stamping</h1>
+        <span class="difficulty">Intermediate Level</span>
+
+        <div class="section">
+            <h2>Overview</h2>
+            <p>This example demonstrates a cost-saving approach to file stamping by batching uploads and only stamping
+                collections twice daily (noon and midnight) instead of immediately after each upload. It shows how to
+                optimize costs while maintaining blockchain verification.</p>
+
+            <div class="highlight">
+                <h3>🎯 What This Example Teaches</h3>
+                <ul>
+                    <li><strong>Cost Optimization:</strong> How to minimize API costs through batch processing</li>
+                    <li><strong>Scheduled Operations:</strong> Using cron jobs for automated stamping</li>
+                    <li><strong>Smart Tracking:</strong> Using .dirty flag files to track when stamping is needed</li>
+                    <li><strong>Manual Override:</strong> Providing manual stamping capabilities when needed</li>
+                    <li><strong>Web Interface:</strong> Building a user-friendly file management interface</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Technology Stack</h2>
+            <div class="tech-stack">
+                <span class="tech-tag">Express.js</span>
+                <span class="tech-tag">node-cron</span>
+                <span class="tech-tag">express-fileupload</span>
+                <span class="tech-tag">HTML/CSS</span>
+                <span class="tech-tag">Scheduling</span>
+                <span class="tech-tag">Batch Processing</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Cost Comparison</h2>
+            <div class="cost-comparison">
+                <h3>Traditional vs. Scheduled Approach</h3>
+                <table class="cost-table">
+                    <thead>
+                        <tr>
+                            <th>Approach</th>
+                            <th>Stamps per day</th>
+                            <th>Cost</th>
+                            <th>Benefits</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Immediate stamping</td>
+                            <td>100+</td>
+                            <td>High</td>
+                            <td>Instant verification</td>
+                        </tr>
+                        <tr class="highlight-row">
+                            <td><strong>Scheduled stamping</strong></td>
+                            <td><strong>2</strong></td>
+                            <td><strong>Low</strong></td>
+                            <td><strong>Cost-effective, still verified</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>How It Works</h2>
+
+            <h3>📁 File Upload Flow</h3>
+            <ol>
+                <li>Users upload files through the web interface</li>
+                <li>Files are stored in the <code>uploads/</code> directory</li>
+                <li>A <code>.dirty</code> flag file is created to mark the collection as needing stamping</li>
+                <li>Files are <strong>NOT</strong> stamped immediately (cost savings!)</li>
+            </ol>
+
+            <h3>⏰ Scheduled Stamping</h3>
+            <ul>
+                <li><strong>Automatic:</strong> Collections are stamped at noon and midnight if <code>.dirty</code>
+                    exists</li>
+                <li><strong>Smart:</strong> Only stamps if there are unstamped changes</li>
+                <li><strong>Resilient:</strong> If stamping fails, <code>.dirty</code> file is preserved for retry</li>
+            </ul>
+
+            <h3>🔧 Manual Stamping</h3>
+            <ul>
+                <li>Users can manually trigger stamping via the web interface</li>
+                <li>Useful for urgent files or testing</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Core Implementation</h2>
+
+            <h3>🕐 Scheduled Stamping with node-cron</h3>
+            <div class="code-block">
+                const cron = require('node-cron');
+
+                // Schedule stamping at noon and midnight
+                cron.schedule('0 12,0 * * *', async () => {
+                console.log('Running scheduled stamp...');
+                await stampCollectionIfDirty();
+                });
+
+                async function stampCollectionIfDirty() {
+                if (fs.existsSync('.dirty')) {
+                try {
+                // Upload all files in uploads directory
+                const files = fs.readdirSync('uploads');
+                for (const file of files) {
+                await uploadFile(`uploads/${file}`);
+                }
+
+                // Stamp the collection
+                await stampCollection();
+
+                // Remove dirty flag
+                fs.unlinkSync('.dirty');
+                console.log('Collection stamped successfully, .dirty file removed');
+                } catch (error) {
+                console.error('Scheduled stamping failed:', error);
+                // Keep .dirty file for retry
+                }
+                } else {
+                console.log('Collection is not dirty, skipping stamp');
+                }
+                }
+            </div>
+
+            <h3>🏷️ Dirty Flag Management</h3>
+            <div class="code-block">
+                // Create dirty flag when files are uploaded
+                app.post('/upload', upload.array('files'), (req, res) => {
+                // Save uploaded files
+                // ...
+
+                // Create .dirty flag to indicate stamping is needed
+                fs.writeFileSync('.dirty', new Date().toISOString());
+
+                res.json({ success: true, message: 'Files uploaded, will be stamped at next scheduled time' });
+                });
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>API Endpoints</h2>
+            <ul>
+                <li><code>GET /</code> - Web interface</li>
+                <li><code>POST /upload</code> - Upload files (multipart/form-data)</li>
+                <li><code>GET /files</code> - List uploaded files</li>
+                <li><code>POST /stamp</code> - Manually stamp collection</li>
+                <li><code>GET /dirty</code> - Check if collection needs stamping</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Web Interface Features</h2>
+            <ul>
+                <li><strong>Modern UI:</strong> Clean, responsive web interface</li>
+                <li><strong>File Management:</strong> View uploaded files with details</li>
+                <li><strong>Real-time Status:</strong> See if collection needs stamping</li>
+                <li><strong>Progress Indicators:</strong> Upload progress and loading states</li>
+                <li><strong>Error Handling:</strong> Graceful error handling and user feedback</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Use Cases</h2>
+            <ul>
+                <li><strong>High-Volume Uploads:</strong> When you have many files to upload daily</li>
+                <li><strong>Cost-Sensitive Applications:</strong> When API costs are a concern</li>
+                <li><strong>Batch Processing:</strong> When immediate verification isn't required</li>
+                <li><strong>Development/Testing:</strong> When you want to test without high costs</li>
+                <li><strong>Non-Critical Applications:</strong> When slight delays in verification are acceptable</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Configuration</h2>
+            <p>The server runs on <code>process.env.PORT</code> or defaults to port 3000.</p>
+
+            <div class="highlight">
+                <strong>Customization Options:</strong>
+                <ul>
+                    <li>Change stamping schedule by modifying the cron expression</li>
+                    <li>Adjust file size limits in the upload configuration</li>
+                    <li>Modify the collection name and network settings</li>
+                    <li>Add authentication for production use</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Next Steps</h2>
+            <p>After understanding this example, you can explore:</p>
+            <ul>
+                <li><a href="example-1-file-browser.html">Example 1</a> - Advanced file management patterns</li>
+                <li><a href="example-4-events.html">Example 4</a> - Real-time event monitoring</li>
+                <li><a href="example-6-local-hash.html">Example 6</a> - Local hash calculation</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Running the Example</h2>
+            <div class="code-block">
+                # Install dependencies
+                npm install
+
+                # Set up environment
+                cp ../env.example .env
+                # Edit .env with your API key
+
+                # Start the server
+                npm start
+
+                # Open your browser
+                # http://localhost:3000
+            </div>
+
+            <div class="highlight">
+                <strong>Usage Tips:</strong>
+                <ol>
+                    <li><strong>Upload files</strong> through the web interface</li>
+                    <li><strong>Monitor status</strong> - the UI shows if collection needs stamping</li>
+                    <li><strong>Wait for automatic stamping</strong> at noon/midnight, or</li>
+                    <li><strong>Manual stamp</strong> if you need immediate processing</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

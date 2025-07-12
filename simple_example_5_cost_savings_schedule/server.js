@@ -10,7 +10,7 @@ const FormData = require('form-data');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.EX5_PORT || 3045;
 const API_BASE_URL = process.env.API_BASE_URL;
 const API_KEY = process.env.API_KEY;
 const API_SECRET = process.env.API_SECRET;

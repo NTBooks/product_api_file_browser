@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simplest Example: Upload & Stamp - Chainletter API Wiki</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #28a745;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .difficulty {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .back-link {
+            margin-bottom: 20px;
+        }
+
+        .back-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            border-left: 4px solid #28a745;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .tech-tag {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            color: #495057;
+        }
+
+        .file-structure {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .concept-box {
+            background: #e8f4fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="index.html">← Back to Examples Index</a>
+        </div>
+
+        <h1>📝 Simplest Example: Upload & Stamp</h1>
+        <span class="difficulty">Beginner Level</span>
+
+        <div class="section">
+            <h2>Overview</h2>
+            <p>This is the most basic example in the {REPO_LINK} repository, demonstrating the fundamental workflow of
+                the Chainletter API: creating a file, uploading it to IPFS, and stamping the collection in a single API
+                call.</p>
+
+            <div class="concept-box">
+                <h3>🎯 What This Example Teaches</h3>
+                <ul>
+                    <li><strong>Basic API Integration:</strong> How to make your first API call to the Chainletter
+                        service</li>
+                    <li><strong>File Upload:</strong> Simple file upload with automatic collection creation</li>
+                    <li><strong>Immediate Stamping:</strong> Using the <code>stamp-immediately</code> header for instant
+                        blockchain verification</li>
+                    <li><strong>Error Handling:</strong> Basic error handling and response parsing</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Technology Stack</h2>
+            <div class="tech-stack">
+                <span class="tech-tag">Node.js</span>
+                <span class="tech-tag">Axios</span>
+                <span class="tech-tag">Form-Data</span>
+                <span class="tech-tag">Environment Variables</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>How It Works</h2>
+            <p>The example follows a simple 3-step process:</p>
+
+            <ol>
+                <li><strong>Create Content:</strong> Generates a timestamp string with current date/time</li>
+                <li><strong>Upload to IPFS:</strong> Uploads the content as <code>timestamp.txt</code> to a "Timestamp
+                    Demo" collection</li>
+                <li><strong>Stamp Collection:</strong> Automatically stamps the collection using the
+                    <code>stamp-immediately</code> header</li>
+            </ol>
+
+            <div class="highlight">
+                <strong>Key Innovation:</strong> The <code>stamp-immediately</code> header allows you to upload and
+                stamp in a single API call, eliminating the need for separate requests.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>File Structure</h2>
+            <div class="file-structure">
+                simplest_example_3_upload_and_stamp/
+                ├── index.js # Main application logic
+                ├── minimal.js # Even simpler version
+                ├── package.json # Dependencies
+                ├── .env # API credentials (create from env.example)
+                └── README.md # Documentation
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Core Implementation</h2>
+            <p>The main logic is contained in a single file (<code>index.js</code>):</p>
+
+            <div class="code-block">
+                // Create timestamp content
+                const timestamp = new Date().toISOString();
+                const content = `Timestamp: ${timestamp}\nCreated by: Chainletter API Demo`;
+
+                // Upload with immediate stamping
+                const formData = new FormData();
+                formData.append('file', Buffer.from(content), 'timestamp.txt');
+
+                const response = await axios.post(`${API_BASE_URL}/webhook/${API_KEY}`, formData, {
+                headers: {
+                'secret-key': API_SECRET,
+                'group-id': 'Timestamp Demo',
+                'stamp-immediately': 'true'
+                }
+                });
+            </div>
+
+            <div class="highlight">
+                <strong>Why This Matters:</strong> This demonstrates the simplest possible integration - just 3 lines of
+                code to upload and stamp a file on the blockchain.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>API Concepts Demonstrated</h2>
+
+            <h3>🔑 Authentication</h3>
+            <p>Uses API key and secret key headers for authentication:</p>
+            <div class="code-block">
+                headers: {
+                'secret-key': API_SECRET,
+                'group-id': 'Timestamp Demo'
+                }
+            </div>
+
+            <h3>📁 Collection Management</h3>
+            <p>Creates collections automatically using the <code>group-id</code> header. If the collection doesn't
+                exist, it's created automatically.</p>
+
+            <h3>⚡ Immediate Stamping</h3>
+            <p>The <code>stamp-immediately: true</code> header tells the API to stamp the collection immediately after
+                upload, eliminating the need for a separate stamping call.</p>
+
+            <h3>📊 Response Handling</h3>
+            <p>Demonstrates how to parse the API response to extract file hash and stamping information:</p>
+            <div class="code-block">
+                console.log(`✅ Uploaded ${data.name} (${data.hash})`);
+                console.log(`✅ Stamped ${data.files_stamped} files`);
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Use Cases</h2>
+            <ul>
+                <li><strong>Proof of Concept:</strong> Perfect for demonstrating basic API functionality</li>
+                <li><strong>Learning:</strong> Ideal starting point for understanding the API</li>
+                <li><strong>Simple Timestamping:</strong> Creating timestamped records on the blockchain</li>
+                <li><strong>Code Sample:</strong> Can be used as a minimal code example on documentation sites</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Advanced Variations</h2>
+            <p>The example includes two versions:</p>
+
+            <h3>index.js</h3>
+            <p>Full-featured version with error handling, logging, and detailed output.</p>
+
+            <h3>minimal.js</h3>
+            <p>Ultra-minimal version with just the essential code - perfect for embedding in documentation or
+                presentations.</p>
+        </div>
+
+        <div class="section">
+            <h2>Next Steps</h2>
+            <p>After understanding this example, you can explore:</p>
+            <ul>
+                <li><a href="example-2-quiz-to-cert.html">Example 2</a> - Building web applications with the API</li>
+                <li><a href="example-4-events.html">Example 4</a> - Real-time event monitoring</li>
+                <li><a href="example-5-cost-savings.html">Example 5</a> - Cost optimization strategies</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Running the Example</h2>
+            <div class="code-block">
+                # Install dependencies
+                npm install
+
+                # Configure API credentials
+                cp env.example .env
+                # Edit .env with your API credentials
+
+                # Run the demo
+                npm start
+            </div>
+
+            <p><strong>Expected Output:</strong></p>
+            <div class="code-block">
+                ✅ Created timestamp content
+                ✅ Uploaded timestamp.txt
+                File hash: QmHash...
+                ✅ Stamped 1 files
+                Stamp hash: pm_hash_abc123
+                🎉 Demo completed successfully!
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

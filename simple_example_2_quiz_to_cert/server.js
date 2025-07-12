@@ -8,7 +8,7 @@ console.log('Looking for .env at:', envPath);
 require('dotenv').config({ path: envPath });
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.EX2_PORT || 3042;
 
 // Middleware
 app.use(express.json());

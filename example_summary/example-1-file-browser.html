@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complex File Browser - Chainletter API Wiki</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .difficulty {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .back-link {
+            margin-bottom: 20px;
+        }
+
+        .back-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            border-left: 4px solid #e74c3c;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #e74c3c;
+            margin: 15px 0;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .tech-tag {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            color: #495057;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .feature-card h4 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+
+        .feature-card p {
+            margin: 0;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="index.html">← Back to Examples Index</a>
+        </div>
+
+        <h1>🌐 Complex File Browser</h1>
+        <span class="difficulty">Advanced Level</span>
+
+        <div class="section">
+            <h2>Overview</h2>
+            <p>This is the most comprehensive example in the {REPO_LINK} repository, demonstrating a full-featured React
+                application with file management, lazy loading, real-time updates, and comprehensive API integration. It
+                showcases production-ready patterns and advanced React concepts.</p>
+
+            <div class="highlight">
+                <h3>🎯 What This Example Teaches</h3>
+                <ul>
+                    <li><strong>Production React Patterns:</strong> Modern React with hooks, context, and custom
+                        components</li>
+                    <li><strong>Advanced State Management:</strong> React Query for server state and caching</li>
+                    <li><strong>Lazy Loading:</strong> Efficient image loading with intersection observer</li>
+                    <li><strong>Real-time Updates:</strong> Server-Sent Events for live updates</li>
+                    <li><strong>Material-UI Integration:</strong> Professional UI components and theming</li>
+                    <li><strong>Error Handling:</strong> Comprehensive error boundaries and fallbacks</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Technology Stack</h2>
+            <div class="tech-stack">
+                <span class="tech-tag">React</span>
+                <span class="tech-tag">Material-UI</span>
+                <span class="tech-tag">React Query</span>
+                <span class="tech-tag">Vite</span>
+                <span class="tech-tag">Express.js</span>
+                <span class="tech-tag">Lazy Loading</span>
+                <span class="tech-tag">SSE</span>
+                <span class="tech-tag">TypeScript</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Key Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>📁 File Management</h4>
+                    <p>Upload, delete, and organize files in collections with drag & drop support</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🖼️ Lazy Image Loading</h4>
+                    <p>Efficient image loading with intersection observer and fallback strategies</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚡ Real-time Updates</h4>
+                    <p>Live updates via Server-Sent Events for file operations</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔍 File Preview</h4>
+                    <p>Preview images, text files, and JSON content with proper formatting</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🏷️ Collection Stamping</h4>
+                    <p>Stamp collections on the blockchain with real-time status updates</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📊 Statistics</h4>
+                    <p>View collection statistics and file metadata</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Architecture</h2>
+
+            <h3>🏗️ Frontend Architecture</h3>
+            <ul>
+                <li><strong>React 18:</strong> Latest React with concurrent features</li>
+                <li><strong>Vite:</strong> Fast build tool and development server</li>
+                <li><strong>Material-UI:</strong> Professional UI component library</li>
+                <li><strong>React Query:</strong> Server state management and caching</li>
+                <li><strong>Custom Hooks:</strong> Reusable logic for API calls and state</li>
+            </ul>
+
+            <h3>🔧 Backend Architecture</h3>
+            <ul>
+                <li><strong>Express.js:</strong> API server with proxy capabilities</li>
+                <li><strong>Session Management:</strong> Credential storage and management</li>
+                <li><strong>IPFS Proxy:</strong> CORS handling for IPFS content</li>
+                <li><strong>SSE Support:</strong> Real-time event streaming</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Core Implementation</h2>
+
+            <h3>🔄 React Query Integration</h3>
+            <div class="code-block">
+                // Custom hook for file operations
+                export const useFiles = (groupId) => {
+                return useQuery({
+                queryKey: ['files', groupId],
+                queryFn: () => getFiles(groupId),
+                enabled: !!groupId,
+                staleTime: 1 * 60 * 1000, // 1 minute
+                });
+                };
+
+                // Custom hook for file uploads
+                export const useUploadFile = () => {
+                const queryClient = useQueryClient();
+
+                return useMutation({
+                mutationFn: ({ file, groupId, network }) =>
+                uploadFile(file, groupId, network),
+                onSuccess: (data, variables) => {
+                // Invalidate and refetch files
+                queryClient.invalidateQueries({
+                queryKey: ['files', variables.groupId],
+                });
+                },
+                });
+                };
+            </div>
+
+            <h3>🖼️ Lazy Image Loading</h3>
+            <div class="code-block">
+                const LazyImage = ({ src, alt, width, height, ...props }) => {
+                const [imageState, setImageState] = useState("loading");
+                const [triedIpfsFallback, setTriedIpfsFallback] = useState(false);
+                const { ref, inView } = useInView({ triggerOnce: true });
+
+                return (
+                <Box ref={ref} {...props}>
+                    {/* Show placeholder while loading */}
+                    {(!inView || imageState === "loading") &&
+                    <Placeholder />}
+
+                    {/* Show image when in view */}
+                    {inView && src && (
+                    <img src={!triedIpfsFallback ? `/ipfs?url=${encodeURIComponent(src)}` :
+                        `https://ipfs.io/ipfs/${getCidFromSrc(src)}` } alt={alt} onLoad={()=> setImageState("loaded")}
+                    onError={() => {
+                    if (!triedIpfsFallback) {
+                    setTriedIpfsFallback(true);
+                    } else {
+                    setImageState("error");
+                    }
+                    }}
+                    />
+                    )}
+                </Box>
+                );
+                };
+            </div>
+
+            <h3>📡 Real-time Updates</h3>
+            <div class="code-block">
+                // Server-Sent Events for real-time updates
+                useEffect(() => {
+                const eventSource = new EventSource('/api/events/stream');
+
+                eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                switch(data.type) {
+                case 'file.uploaded':
+                queryClient.invalidateQueries(['files']);
+                break;
+                case 'collection.stamped':
+                queryClient.invalidateQueries(['groupStats']);
+                break;
+                }
+                };
+
+                return () => eventSource.close();
+                }, [queryClient]);
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Advanced Patterns</h2>
+
+            <h3>🎨 Component Architecture</h3>
+            <ul>
+                <li><strong>Custom Hooks:</strong> Reusable logic for API calls, state management, and UI interactions
+                </li>
+                <li><strong>Compound Components:</strong> Flexible component composition patterns</li>
+                <li><strong>Error Boundaries:</strong> Graceful error handling at component boundaries</li>
+                <li><strong>Context Providers:</strong> Global state management for authentication and settings</li>
+            </ul>
+
+            <h3>⚡ Performance Optimizations</h3>
+            <ul>
+                <li><strong>React.memo:</strong> Preventing unnecessary re-renders</li>
+                <li><strong>useCallback/useMemo:</strong> Optimizing expensive calculations</li>
+                <li><strong>Code Splitting:</strong> Lazy loading of components and routes</li>
+                <li><strong>Virtual Scrolling:</strong> Efficient rendering of large lists</li>
+            </ul>
+
+            <h3>🛡️ Error Handling</h3>
+            <ul>
+                <li><strong>Error Boundaries:</strong> Catch and handle component errors</li>
+                <li><strong>Fallback UI:</strong> Graceful degradation when features fail</li>
+                <li><strong>Retry Logic:</strong> Automatic retry for failed API calls</li>
+                <li><strong>User Feedback:</strong> Clear error messages and loading states</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>File Structure</h2>
+            <div class="code-block">
+                complex_example_1_file_browser/
+                ├── src/
+                │ ├── components/ # Reusable UI components
+                │ │ ├── LazyImage.jsx # Lazy loading image component
+                │ │ └── ...
+                │ ├── hooks/ # Custom React hooks
+                │ │ ├── useApi.js # API integration hooks
+                │ │ └── ...
+                │ ├── services/ # API service layer
+                │ │ └── api.js # API client functions
+                │ ├── pages/ # Page components
+                │ │ ├── DashboardPage.jsx
+                │ │ ├── FilesPage.jsx
+                │ │ └── ...
+                │ └── utils/ # Utility functions
+                ├── server/ # Express.js backend
+                │ └── server.js # API server
+                ├── public/ # Static assets
+                └── package.json # Dependencies
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Use Cases</h2>
+            <ul>
+                <li><strong>Enterprise File Management:</strong> Professional file management systems</li>
+                <li><strong>Content Management:</strong> Digital asset management platforms</li>
+                <li><strong>Document Storage:</strong> Secure document storage and sharing</li>
+                <li><strong>Media Libraries:</strong> Image and video management systems</li>
+                <li><strong>Production Applications:</strong> Real-world applications with complex requirements</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Learning Resources</h2>
+            <p>The example includes comprehensive tutorials:</p>
+            <ul>
+                <li><strong>LAZY_LOADING_TUTORIAL.md:</strong> Detailed guide to lazy loading implementation</li>
+                <li><strong>REACT_QUERY_TUTORIAL.md:</strong> React Query patterns and best practices</li>
+                <li><strong>Code Comments:</strong> Extensive inline documentation</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Next Steps</h2>
+            <p>After understanding this example, you can explore:</p>
+            <ul>
+                <li><a href="example-2-quiz-to-cert.html">Example 2</a> - Web application patterns</li>
+                <li><a href="example-4-events.html">Example 4</a> - Real-time event monitoring</li>
+                <li><a href="example-5-cost-savings.html">Example 5</a> - Cost optimization strategies</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Running the Example</h2>
+            <div class="code-block">
+                # Install dependencies
+                npm install
+
+                # Configure environment variables
+                cp ../env.example .env
+                # Edit .env with your API credentials
+
+                # Start the development server
+                npm run dev
+
+                # Or build for production
+                npm run build
+                npm run preview
+            </div>
+
+            <div class="highlight">
+                <strong>Development Features:</strong>
+                <ul>
+                    <li><strong>Hot Reload:</strong> Instant updates during development</li>
+                    <li><strong>TypeScript Support:</strong> Full type checking and IntelliSense</li>
+                    <li><strong>ESLint Integration:</strong> Code quality and consistency</li>
+                    <li><strong>Build Optimization:</strong> Production-ready builds with Vite</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

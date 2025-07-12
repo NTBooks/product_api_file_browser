@@ -8,7 +8,7 @@ const path = require('path');
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.EX1_SERVER_PORT || 3041;
 
 // Session configuration
 app.use(session({
