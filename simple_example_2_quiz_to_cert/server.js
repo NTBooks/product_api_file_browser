@@ -320,10 +320,6 @@ app.get('/api/file-status/:hash', async (req, res) => {
         }
 
         const data = response.data;
-        // If this was a fallback response, add null claim_link to indicate export-links failed
-        if (data && data.data && !response.config.headers['export-links']) {
-            data.data.claim_link = null;
-        }
 
         res.json({
             success: true,

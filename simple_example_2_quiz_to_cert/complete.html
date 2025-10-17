@@ -292,14 +292,18 @@
                             <span class="status-label">Contract Address:</span>
                             <span class="status-value hash-display">${blockchainResult.success && blockchainResult.data && blockchainResult.data.data && blockchainResult.data.data.contract ? blockchainResult.data.data.contract : 'Not available'}</span>
                         </div>
-                        ${blockchainResult.success && blockchainResult.data && blockchainResult.data.data && blockchainResult.data.data.claim_link ? `
-                        <div class="status-item">
-                            <span class="status-label">Claim Link:</span>
-                            <span class="status-value">
-                                <a href="${blockchainResult.data.data.claim_link}" target="_blank" style="color: #007bff;">Claim Certificate</a>
-                            </span>
-                        </div>
-                        ` : ''}
+                        ${blockchainResult.success && blockchainResult.data && blockchainResult.data.export_data && blockchainResult.data.export_data.permalinks ? (() => {
+                            const fileHash = fileData.hash || hash;
+                            const matchingPermalink = blockchainResult.data.export_data.permalinks.find(permalink => permalink.cid === fileHash);
+                            return matchingPermalink ? `
+                            <div class="status-item">
+                                <span class="status-label">Secret Claim Link:</span>
+                                <span class="status-value">
+                                    <a href="${matchingPermalink.shorturl}" target="_blank" style="color: #007bff;">Secret Claim Link</a>
+                                </span>
+                            </div>
+                            ` : '';
+                        })() : ''}
                         ${fileData.gatewayurl ? `
                         <div class="status-item">
                             <span class="status-label">Gateway URL:</span>
