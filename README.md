@@ -229,32 +229,18 @@ PORT=3001
 ### Base URL
 
 ```
-https://api.chainletter.io
+https://{your subdomain}.chainletter.io
 ```
 
 ### Authentication
 
 All requests require API key authentication via URL path parameter:
 
-```
-/webhook/{apikey}
-```
-
-### Rate Limits
-
-- File uploads: 10 per minute
-- Collection stamps: 5 per minute
-- API calls: 100 per minute
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
-
-- **Documentation**: [chainletter.io/docs](https://chainletter.io/docs)
-- **API Reference**: [chainletter.io/api](https://chainletter.io/api)
-- **Community**: [Discord](https://discord.gg/chainletter)
 
 ---
 
